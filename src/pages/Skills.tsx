@@ -42,5 +42,4 @@ export default function Skills() {
   );
 }
 
-//git test
 
