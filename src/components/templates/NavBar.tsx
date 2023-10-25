@@ -30,11 +30,19 @@ export default function Navbar() {
     document.documentElement.setAttribute("class", theme);
   }, [theme]);
 
+  const navbarClasses = clsx(
+    "px-5 border-b border-gray-200 sticky top-0 z-50",
+    {
+      "bg-white": theme === "light",
+      "bg-[#1A1B1E] border-gray-800": theme === "dark",
+    }
+  );
+
   return (
     <nav
       id="navbar"
-      className=" px-5 border-b border-gray-200 dark:bg-[#1A1B1E] dark:border-gray-800 sticky top-0 z-50"
-    >
+      className= {navbarClasses}>
+    
       <div className="flex items-center justify-between w-full max-w-4xl m-auto">
         <Navlinks position="top" />
         <BurgerButton />
