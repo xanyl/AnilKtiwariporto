@@ -4,7 +4,6 @@ import SkillCard from '../components/SkillCard';
 import { skillCategories } from '../data/skills/skillCategories';
 import { skills } from '../data/skills/skills';
 
-
 export default function Skills() {
   return (
     <MotionPage className="py-7 px-5 sm:px-0 pb-20" type="bottom">
@@ -14,7 +13,7 @@ export default function Skills() {
       <Tabs defaultValue="language" variant="pills" color="blue" mt="md">
         <Tabs.List grow>
           {skillCategories.map((category) => (
-            <Tabs.Tab value={category.toLowerCase()} key={category} className="text-black dark:text-white hover:dark:bg-blue-500/50 ">
+            <Tabs.Tab value={category.toLowerCase()} key={category} className="hover:dark:bg-blue-500/50 ">
               {category}
             </Tabs.Tab>
           ))}
