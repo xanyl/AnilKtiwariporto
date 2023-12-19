@@ -12,8 +12,14 @@ export default function About() {
       <Grid>
         <Grid.Col xs={12} md={3} orderXs={1} orderMd={2}>
           <MotionPage type="bottom">
-            <Center sx={{ paddingTop: '1.5rem' }}>
-              <img src={getImgUrl('anil.JPG')} alt="akbaroke" width={150} height={150} className="rounded-full shadow-lg dark:shadow-gray-700/50 mt-5" />
+            <Center sx={{ paddingTop: "1.5rem" }}>
+              <img
+                src={getImgUrl("anil.JPG")}
+                alt="akbaroke"
+                width={150}
+                height={150}
+                className="rounded-full shadow-lg dark:shadow-gray-700/50 mt-5"
+              />
             </Center>
           </MotionPage>
         </Grid.Col>
@@ -23,14 +29,28 @@ export default function About() {
               About Me
             </Text>
 
-            <Text component="span" variant="gradient" size={26} weight="bold" gradient={{ from: 'indigo', to: `${theme === 'dark' ? 'gray' : 'black'}`, deg: 45 }}>
+            <Text
+              component="span"
+              variant="gradient"
+              size={26}
+              weight="bold"
+              gradient={{
+                from: "indigo",
+                to: `${theme === "dark" ? "gray" : "black"}`,
+                deg: 45,
+              }}
+            >
               Anil K Tiwari
             </Text>
             <Text size="md" my="sm">
-              Hi everyone, my name is Anil K Tiwari. I am a Frontend Web Developer, Computer Engineer, AI enthusiast and Computer Science Student.
+              Hi everyone, my name is Anil K Tiwari. I am a Frontend Web
+              Developer, Computer Engineer, AI enthusiast and Computer Science
+              Student.
             </Text>
             <Text size="md" my="sm">
-              I live in Pokhara, Nepal. I was born in Pokhara, June 21 1999. I am 24 years old. I am a Computer Engineer Student from Pokhara University .
+              I live in Pokhara, Nepal. I was born in Pokhara, June 21 1999. I
+              am 24 years old. I am a Computer Engineer Student from Pokhara
+              University .
             </Text>
             {/* <Text size="md" my="sm">
               Coding has been my passion and hobby since I was 18 years old, and I have loved computers since I was a kid. Besides coding, I like listening to music. I also like to play games. My favorite genre is First Person Shooters. I
@@ -45,34 +65,53 @@ export default function About() {
             Education
           </Text>
           <Timeline active={1} mt="sm">
+
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
                   University
                 </Text>
-              }>
-              <Text className="dark:text-gray-400">Pokhara University, SOE</Text>
+              }
+            >
+              <Text className="dark:text-gray-400">
+                Pokhara University, SOE
+              </Text>
               <Text size="md" className="dark:text-gray-400">
                 Computer Engineering (CGPA: 3.41)
               </Text>
-              <Text size="sm" color="dimmed" mt={4} className="dark:text-gray-400">
+              <Text
+                size="sm"
+                color="dimmed"
+                mt={4}
+                className="dark:text-gray-400"
+              >
                 2018 - 2023
               </Text>
             </Timeline.Item>
+
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
                   High School
                 </Text>
-              }>
-              <Text className="dark:text-gray-400">Diamond Higher Secondary School</Text>
+              }
+            >
+              <Text className="dark:text-gray-400">
+                Diamond Higher Secondary School
+              </Text>
               <Text size="md" className="dark:text-gray-400">
                 Mathematics & Physics
               </Text>
-              <Text size="sm" color="dimmed" mt={4} className="dark:text-gray-400">
+              <Text
+                size="sm"
+                color="dimmed"
+                mt={4}
+                className="dark:text-gray-400"
+              >
                 2016 - 2018
               </Text>
             </Timeline.Item>
+
           </Timeline>
         </MotionPage>
       </Box>
@@ -82,22 +121,58 @@ export default function About() {
             Work Experience
           </Text>
           <Timeline active={0} mt="sm">
+
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
                   Frontend Developer Intern
                 </Text>
-              }>
+              }
+            >
               <Text className="dark:text-gray-400">Encoders Inc.</Text>
               <List>
-                <List.Item className="dark:text-gray-400 list-disc">Create website ui designs</List.Item>
-                <List.Item className="dark:text-gray-400 list-disc">website development by implementing the UI design that has been made</List.Item>
-                <List.Item className="dark:text-gray-400 list-disc">Deploy to the hosting server</List.Item>
+                <List.Item className="dark:text-gray-400 list-disc">
+                  Create website ui designs
+                </List.Item>
+                <List.Item className="dark:text-gray-400 list-disc">
+                  website development by implementing the UI design that has
+                  been made
+                </List.Item>
+                <List.Item className="dark:text-gray-400 list-disc">
+                  Deploy to the hosting server
+                </List.Item>
               </List>
               <Text size="sm" color="dimmed" mt={4}>
                 March 2023 - August 2023
               </Text>
             </Timeline.Item>
+            <Timeline.Item
+              title={
+                <Text weight="bold" size="lg" className="dark:text-gray-400">
+                  Web3 Developer Bootcamp
+                </Text>
+              }
+            >
+              <Text className="dark:text-gray-400">Builder's Academy</Text>
+              <List>
+                <List.Item className="dark:text-gray-400 list-disc">
+                  Developed and deployed Clarity smart contracts on the Stacks
+                  blockchain.
+                </List.Item>
+                <List.Item className="dark:text-gray-400 list-disc">
+                  Utilized StackJS for transaction generation, signing, and
+                  broadcast.
+                </List.Item>
+                <List.Item className="dark:text-gray-400 list-disc">
+                  Built user-friendly interfaces with ReactJS and NextJS for
+                  interacting with smart contracts.
+                </List.Item>
+              </List>
+              <Text size="sm" color="dimmed" mt={4}>
+                Sep 2023 - Nov 2023
+              </Text>
+            </Timeline.Item>
+
           </Timeline>
         </MotionPage>
       </Box>
@@ -107,13 +182,17 @@ export default function About() {
             Resume
           </Text>
           <Box>
-            You can read my resume{' '}
-            <a href="https://drive.google.com/file/d/1r80CMSSM0ti5G16GJORxQlnYOYTu9_rz/view?usp=sharing" target="_blank" className="underline text-blue-400 cursor-pointer">
+            You can read my resume{" "}
+            <a
+              href="https://drive.google.com/file/d/1r80CMSSM0ti5G16GJORxQlnYOYTu9_rz/view?usp=sharing"
+              target="_blank"
+              className="underline text-blue-400 cursor-pointer"
+            >
               here.
             </a>
           </Box>
         </MotionPage>
       </Box>
     </div>
-  )
+  );
 }
