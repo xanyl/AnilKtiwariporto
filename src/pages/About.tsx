@@ -107,7 +107,7 @@ export default function About() {
             Resume
           </Text>
           <Box>
-            You can read my resume{' here'}
+            You can read my resume{' '}
             <a href="https://drive.google.com/file/d/1r80CMSSM0ti5G16GJORxQlnYOYTu9_rz/view?usp=sharing" target="_blank" className="underline text-blue-400 cursor-pointer">
               here.
             </a>
