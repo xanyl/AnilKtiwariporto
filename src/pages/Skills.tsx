@@ -13,7 +13,7 @@ export default function Skills() {
       <Tabs defaultValue="language" variant="pills" color="blue" mt="md">
         <Tabs.List grow>
           {skillCategories.map((category) => (
-            <Tabs.Tab value={category.toLowerCase()} key={category} className="text-white dark:text-black hover:dark:bg-blue-500/50 ">
+            <Tabs.Tab value={category.toLowerCase()} key={category} className="text-black dark:text-white hover:dark:bg-blue-300/50 ">
               {category}
             </Tabs.Tab>
           ))}

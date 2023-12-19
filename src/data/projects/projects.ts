@@ -92,7 +92,7 @@ export const projects: Project[] = [
       demo: null,
       repo: 'https://github.com/xanyl/PomoDo',
     },
-    tech: ['java', 'android', 'kotlin','Android Studio'],
+    tech: ['java', ],
   },
 //   {
 //     name: 'Grocery Store App',
