@@ -107,10 +107,10 @@ export default function About() {
             Resume
           </Text>
           <Box>
-            You can read my resume{' '}
-            {/* <a href="https://drive.google.com/file/d/1XKykAViR0RqgxrNeVoDsWcVEg8z5l6Rg/view?usp=sharing" target="_blank" className="underline text-blue-400 cursor-pointer">
+            You can read my resume{' here'}
+            <a href="https://drive.google.com/file/d/1r80CMSSM0ti5G16GJORxQlnYOYTu9_rz/view?usp=sharing" target="_blank" className="underline text-blue-400 cursor-pointer">
               here.
-            </a> */}
+            </a>
           </Box>
         </MotionPage>
       </Box>

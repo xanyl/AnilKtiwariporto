@@ -16,7 +16,7 @@ export default function Home() {
         </MotionPage>
         <MotionPage delay={0.8}>
           <Text component="span" variant="gradient" size={26} weight="bold" gradient={{ from: 'indigo', to: `${theme === 'dark' ? 'gray' : 'black'}`, deg: 45 }}>
-            <TypeAnimation sequence={['Computer Engineer', 2000, 'FrontEnd Developer', 2000, 'AI Enthusiast', 2000]} cursor={true} repeat={Infinity} />
+            <TypeAnimation sequence={['Computer Engineer', 2000, 'FrontEnd Developer', 2000, 'AI Enthusiast', 2000, 'Web3 Developer', 2000]} cursor={true} repeat={Infinity} />
           </Text>
         </MotionPage>
         <MotionPage delay={1.4}>
