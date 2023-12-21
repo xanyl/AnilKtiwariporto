@@ -43,7 +43,7 @@ export default function About() {
               Anil K Tiwari
             </Text>
             <Text size="md" my="sm">
-              Hi everyone, my name is Anil K Tiwari. I am a Frontend Web
+              Hi everyone, My name is Anil K Tiwari. I am a Frontend Web
               Developer, Computer Engineer, AI enthusiast and Computer Science
               Student.
             </Text>
@@ -65,7 +65,6 @@ export default function About() {
             Education
           </Text>
           <Timeline active={1} mt="sm">
-
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
@@ -111,7 +110,6 @@ export default function About() {
                 2016 - 2018
               </Text>
             </Timeline.Item>
-
           </Timeline>
         </MotionPage>
       </Box>
@@ -121,7 +119,6 @@ export default function About() {
             Work Experience
           </Text>
           <Timeline active={0} mt="sm">
-
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
@@ -172,7 +169,6 @@ export default function About() {
                 Sep 2023 - Nov 2023
               </Text>
             </Timeline.Item>
-
           </Timeline>
         </MotionPage>
       </Box>
