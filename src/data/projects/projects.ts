@@ -64,16 +64,16 @@ export const projects: Project[] = [
     tech: ['React', 'JavaScript', 'CSS', 'HTML'],
   },
  
-//   {
-//     name: 'Coarse Word Detection',
-//     category: 'Bot',
-//     desc: 'Can detect every harsh word in the chat',
-//     link: {
-//       demo: null,
-//       repo: 'https://github.com/Akbaroke/bot-wa-aktif',
-//     },
-//     tech: ['Nodejs', 'JavaScript'],
-//   },
+  {
+    name: 'Ecommerce Website',
+    category: 'website',
+    desc: 'Can detect every harsh word in the chat',
+    link: {
+      demo: null,
+      repo: 'https://github.com/Akbaroke/bot-wa-aktif',
+    },
+    tech: ['Nodejs', 'JavaScript'],
+  },
   {
     name: 'Connect Krishi',
     category: 'Mobile APP',
