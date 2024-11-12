@@ -66,7 +66,7 @@ export const projects: Project[] = [
  
   {
     name: 'Ecommerce Website',
-    category: 'website',
+    category: 'Website',
     desc: 'Can detect every harsh word in the chat',
     link: {
       demo: null,
