@@ -105,6 +105,15 @@ function Navlinks({ position }: { position: "top" | "side" }): JSX.Element {
         Projects
       </Link>
       <Link
+        to="/publication"
+        className={clsx(
+          def,
+          location.pathname === "/publication" ? active : nonactive
+        )}
+      >
+        Publications
+      </Link>
+      <Link
         to="/contact"
         className={clsx(
           def,

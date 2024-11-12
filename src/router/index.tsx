@@ -4,6 +4,7 @@ import Home from '../pages/Home'
 import About from '../pages/About'
 import Skills from '../pages/Skills'
 import Projects from '../pages/Projects'
+import Publications from '../pages/Publications'
 import Contact from '../pages/Contact'
 import Error from '../pages/Error'
 import Layout from '../components/templates/Layout'
@@ -16,6 +17,7 @@ export default function Routered() {
         <Route path="/about" element={<About />} />
         <Route path="/skills" element={<Skills />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/publication" element={<Publications />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<Error />} />
       </Routes>
