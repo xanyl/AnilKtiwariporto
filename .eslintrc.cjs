@@ -12,4 +12,14 @@ module.exports = {
   rules: {
     'react-refresh/only-export-components': 'warn',
   },
+  overrides: [
+    {
+      files: ['src/hooks/use-FluidCursor.ts'],
+      rules: {
+        '@typescript-eslint/ban-ts-comment': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        'prefer-const': 'off',
+      },
+    },
+  ],
 }
