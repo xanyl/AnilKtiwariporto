@@ -1,8 +1,18 @@
-import { Box, Center, Grid, List, Text, Timeline } from "@mantine/core";
+import {
+  Box,
+  Center,
+  Grid,
+  List,
+  SimpleGrid,
+  Text,
+  Timeline,
+} from "@mantine/core";
 import MotionPage from "../components/MotionPage";
 import useTheme from "../globalState/theme";
 import getImgUrl from "../../public/assets/getImgUrl";
 import { ThemeState } from "../components/templates/NavBar";
+import resumeUrl from "../../resume/Resume_Anil.pdf?url";
+import { certificates } from "../data/certificates";
 
 export default function About() {
   const theme = useTheme((state) => (state as ThemeState).theme);
@@ -15,7 +25,7 @@ export default function About() {
             <Center sx={{ paddingTop: "1.5rem" }}>
               <img
                 src={getImgUrl("anil.JPG")}
-                alt="akbaroke"
+                alt="Anil Kumar Tiwari"
                 width={150}
                 height={150}
                 className="rounded-full shadow-lg dark:shadow-gray-700/50 mt-5"
@@ -40,22 +50,19 @@ export default function About() {
                 deg: 45,
               }}
             >
-              Anil K Tiwari
+              Anil Kumar Tiwari
             </Text>
             <Text size="md" my="sm">
-              Hi everyone, My name is Anil K Tiwari. I am a Frontend Web
-              Developer, Computer Engineer, AI enthusiast and Computer Science
-              Student.
+              I am a Data Engineer with more than two years of experience
+              building scalable data architectures, production-grade machine
+              learning solutions, and automated workflows.
             </Text>
             <Text size="md" my="sm">
-              I live in Pokhara, Nepal. I was born in Pokhara, June 21 1999. I
-              am 24 years old. I am a Computer Engineer Student from Pokhara
-              University .
+              I am pursuing an M.S. in Computer Science at Georgia State
+              University, where I also work as a Graduate Teaching Assistant.
+              My interests include data engineering, AI/ML, LLM integration,
+              and cloud-native systems.
             </Text>
-            {/* <Text size="md" my="sm">
-              Coding has been my passion and hobby since I was 18 years old, and I have loved computers since I was a kid. Besides coding, I like listening to music. I also like to play games. My favorite genre is First Person Shooters. I
-              spend a lot of time on TikTok sharing demo videos of apps.
-            </Text> */}
           </MotionPage>
         </Grid.Col>
       </Grid>
@@ -68,46 +75,35 @@ export default function About() {
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
-                  University
+                  M.S. in Computer Science
                 </Text>
               }
             >
-              <Text className="dark:text-gray-400">
-                Pokhara University, SOE
-              </Text>
-              <Text size="md" className="dark:text-gray-400">
-                Computer Engineering (CGPA: 3.41)
-              </Text>
+              <Text className="dark:text-gray-400">Georgia State University</Text>
               <Text
                 size="sm"
                 color="dimmed"
                 mt={4}
                 className="dark:text-gray-400"
               >
-                2018 - 2023
+                Expected August 2027
               </Text>
             </Timeline.Item>
-
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
-                  High School
+                  B.S. in Computer Engineering
                 </Text>
               }
             >
-              <Text className="dark:text-gray-400">
-                Diamond Higher Secondary School
-              </Text>
-              <Text size="md" className="dark:text-gray-400">
-                Mathematics & Physics
-              </Text>
+              <Text className="dark:text-gray-400">Pokhara University</Text>
               <Text
                 size="sm"
                 color="dimmed"
                 mt={4}
                 className="dark:text-gray-400"
               >
-                2016 - 2018
+                August 2023
               </Text>
             </Timeline.Item>
           </Timeline>
@@ -122,69 +118,130 @@ export default function About() {
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
-                  Frontend Developer Intern
+                  Graduate Teaching Assistant
                 </Text>
               }
             >
-              <Text className="dark:text-gray-400">Encoders Inc.</Text>
+              <Text className="dark:text-gray-400">
+                Georgia State University
+              </Text>
               <List>
                 <List.Item className="dark:text-gray-400 list-disc">
-                  Create website ui designs
+                  Support more than 50 students as a first point of contact,
+                  providing academic guidance and resource referrals.
                 </List.Item>
                 <List.Item className="dark:text-gray-400 list-disc">
-                  website development by implementing the UI design that has
-                  been made
-                </List.Item>
-                <List.Item className="dark:text-gray-400 list-disc">
-                  Deploy to the hosting server
+                  Collaborate with faculty to modernize curriculum using
+                  real-world datasets and industry-standard tools.
                 </List.Item>
               </List>
               <Text size="sm" color="dimmed" mt={4}>
-                March 2023 - August 2023
+                August 2025 - Present
               </Text>
             </Timeline.Item>
             <Timeline.Item
               title={
                 <Text weight="bold" size="lg" className="dark:text-gray-400">
-                  Web3 Developer Bootcamp
+                  Data Engineer
                 </Text>
               }
             >
-              <Text className="dark:text-gray-400">Builder's Academy</Text>
+              <Text className="dark:text-gray-400">Merodream</Text>
               <List>
                 <List.Item className="dark:text-gray-400 list-disc">
-                  Developed and deployed Clarity smart contracts on the Stacks
-                  blockchain.
+                  Designed ETL scripts, CTEs, views, procedures, and Redshift
+                  tasks orchestrated with Apache Airflow.
                 </List.Item>
                 <List.Item className="dark:text-gray-400 list-disc">
-                  Utilized StackJS for transaction generation, signing, and
-                  broadcast.
+                  Built and monitored daily AWS Redshift pipelines while
+                  resolving batch-processing issues.
                 </List.Item>
                 <List.Item className="dark:text-gray-400 list-disc">
-                  Built user-friendly interfaces with ReactJS and NextJS for
-                  interacting with smart contracts.
+                  Optimized SQL queries and table partitioning, reducing cloud
+                  compute costs by 25% while processing terabytes of data.
+                </List.Item>
+                <List.Item className="dark:text-gray-400 list-disc">
+                  Supported scalable ML training pipelines using Docker and
+                  Kubernetes.
                 </List.Item>
               </List>
               <Text size="sm" color="dimmed" mt={4}>
-                Sep 2023 - Nov 2023
+                September 2023 - August 2025
               </Text>
             </Timeline.Item>
           </Timeline>
         </MotionPage>
       </Box>
-      <Box mt="md" id="resume" mb="xl" className="mb-20">
+      <Box mt="xl">
         <MotionPage delay={1.5}>
+          <Text size={42} weight="bold">
+            Certificates
+          </Text>
+          <SimpleGrid
+            cols={1}
+            breakpoints={[{ minWidth: "sm", cols: 2 }]}
+            spacing="md"
+            mt="md"
+          >
+            {certificates.map((certificate) => (
+              <Box
+                key={certificate.credentialId}
+                className="rounded-xl border border-gray-200 p-5 shadow-sm dark:border-gray-700"
+              >
+                <Text weight="bold" size="lg">
+                  {certificate.title}
+                </Text>
+                <Text className="dark:text-gray-400">
+                  {certificate.issuer}
+                </Text>
+                <Text size="sm" color="dimmed" mt={4}>
+                  {certificate.issued} - Credential ID: {certificate.credentialId}
+                </Text>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a
+                    href={certificate.file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  >
+                    View PDF
+                  </a>
+                  {certificate.verificationUrl && (
+                    <a
+                      href={certificate.verificationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-md border border-blue-500 px-3 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+                    >
+                      Verify
+                    </a>
+                  )}
+                </div>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </MotionPage>
+      </Box>
+      <Box mt="md" id="resume" mb="xl" className="mb-20">
+        <MotionPage delay={2}>
           <Text size={42} weight="bold">
             Resume
           </Text>
-          <Box>
-            You can read my resume{" "}
+          <Box className="mt-3 flex flex-wrap gap-3">
             <a
-              href="https://drive.google.com/file/d/1r80CMSSM0ti5G16GJORxQlnYOYTu9_rz/view?usp=sharing"
+              href={resumeUrl}
               target="_blank"
-              className="underline text-blue-400 cursor-pointer"
+              rel="noopener noreferrer"
+              className="rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
             >
-              here.
+              View resume (PDF)
+            </a>
+            <a
+              href={resumeUrl}
+              download="Anil-Kumar-Tiwari-Resume.pdf"
+              className="rounded-md border border-blue-500 px-4 py-2 font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+            >
+              Download resume
             </a>
           </Box>
         </MotionPage>

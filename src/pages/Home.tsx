@@ -12,16 +12,16 @@ export default function Home() {
     <div className="flex sm:flex-wrap flex-wrap-reverse sm:justify-around h-[500px] sm:h-[700px] justify-center items-center px-5 sm:p-0">
       <div className="text-center sm:text-start">
         <MotionPage delay={0.2}>
-          <h1 className="font-black text-4xl">Anil K Tiwari</h1>
+          <h1 className="font-black text-4xl">Anil Kumar Tiwari</h1>
         </MotionPage>
         <MotionPage delay={0.8}>
           <Text component="span" variant="gradient" size={26} weight="bold" gradient={{ from: 'indigo', to: `${theme === 'dark' ? 'gray' : 'black'}`, deg: 45 }}>
-            <TypeAnimation sequence={['Computer Engineer', 2000, 'Front-end Developer', 2000, 'AI Enthusiast', 2000, 'Web3 Developer', 2000]} cursor={true} repeat={Infinity} />
+            <TypeAnimation sequence={['Data Engineer', 2000, 'Machine Learning Engineer', 2000, 'M.S. Computer Science', 2000, 'AI & LLM Developer', 2000]} cursor={true} repeat={Infinity} />
           </Text>
         </MotionPage>
         <MotionPage delay={1.4}>
           <div className="max-w-[300px] text-sm mt-1">
-            Hi everyone <span className="wave">👋🏼</span>. welcome to my portofolio website
+            Hi everyone <span className="wave">👋🏼</span>. Welcome to my portfolio website.
           </div>
         </MotionPage>
       </div>

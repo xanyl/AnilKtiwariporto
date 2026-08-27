@@ -1,107 +1,34 @@
-import { Project } from './project';
-
+import { Project } from "./project";
 
 export const projects: Project[] = [
   {
-    name: 'DrivetoEarn',
-    category: 'Website',
-    desc: '  Web3 app based on stacks blockchain that allows users to earn crypto by driving electric vehicles.',
+    name: "SAM2-LatentDiff",
+    category: "Machine Learning",
+    desc: "A SAM2-guided low-light image enhancement system using Stable Diffusion v1.5, cross-attention, LoRA, and an 87K-parameter PixelRefiner. It achieved 18.61 PSNR, 0.7085 SSIM, 0.2399 LPIPS, and 111 ms inference on an NVIDIA A100.",
     link: {
       demo: null,
-      repo: 'https://github.com/xanyl/driveandearn',
+      repo: null,
     },
-    tech: ['Nextjs', 'TypeScript', 'Tailwind CSS', 'Redux', 'Stacks Blockchain'],
+    tech: ["Python", "PyTorch", "SAM2", "Stable Diffusion", "LoRA"],
   },
   {
-    name: 'Van App',
-    category: 'Website',
-    desc: 'the van app is a web app to help users find and book transportation services like ride hailing, taxis, and delivery vans.',
-    link: {
-      demo: 'https://vancan.netlify.app/',
-      repo: 'https://github.com/xanyl/van-app',
-    },
-    tech: ['React', 'JavaScript', 'Tailwind CSS','Redux'],
-  },
-  {
-    name: 'Dashboard',
-    category: 'Website',
-    desc: 'A dashboard project built with Next js and Tailwind CSS.',
-    link: {
-      demo: 'https://dashboardnext-five.vercel.app/dashboard',
-      repo: 'https://github.com/xanyl/nextjs-dashboard',
-    },
-    tech: ['Nextjs', 'JavaScript', 'Tailwind CSS'],
-  },
- 
-  {
-    name: 'Budget App',
-    category: 'Website',
-    desc: 'A dashboard project built with Next js and Tailwind CSS.',
-    link: {
-      demo: 'https://budget-app-react-wheat.vercel.app/',
-      repo: 'https://github.com/xanyl/budget_app_react',
-    },
-    tech: ['React', 'JavaScript', 'CSS'],
-  },
-  {
-    name: 'Random Quote Generator',
-    category: 'Website',
-    desc: 'A website that generates random quotes with each page load.',
-    link: {
-      demo: 'https://random-quote-generator-lyart.vercel.app/',
-      repo: 'https://github.com/xanyl/random-quote-generator',
-    },
-    tech: ['React', 'JavaScript', 'CSS', 'HTML'],
-  },
-  {
-    name: 'Mobile App Landing Page',
-    category: 'Website',
-    desc: 'A Landing Page for a Mobile App built with React and Tailwind CSS.',
-    link: {
-      demo: 'https://xanyl.github.io/Mobile-App-Landing-Page/',
-      repo: 'https://github.com/xanyl/Mobile-App-Landing-Page',
-    },
-    tech: ['React', 'JavaScript', 'CSS', 'HTML'],
-  },
- 
-  {
-    name: 'Ecommerce Website',
-    category: 'Website',
-    desc: 'Can detect every harsh word in the chat',
+    name: "Wildlife Conservation Image Classification",
+    category: "Machine Learning",
+    desc: "A ResNet50 camera-trap species classifier that addresses severe class imbalance with Focal Loss and oversampling, improving rare-species recall by 20% and reducing manual labeling effort by 70%.",
     link: {
       demo: null,
-      repo: 'https://github.com/Akbaroke/bot-wa-aktif',
+      repo: null,
     },
-    tech: ['Nodejs', 'JavaScript'],
+    tech: ["Python", "ResNet50", "Transfer Learning", "Computer Vision"],
   },
   {
-    name: 'Connect Krishi',
-    category: 'Mobile APP',
-    desc: 'Connect krishi is a mobile app built with flutter to connect farmers and buyers',
+    name: "Hull Tactical Market Prediction",
+    category: "Data Engineering",
+    desc: "A high-performance feature pipeline and six-model stacking ensemble for noisy financial data, with GPU-accelerated feature selection and production-simulation inference using volatility targeting.",
     link: {
       demo: null,
-      repo: 'https://github.com/xanyl/Connect_Krish_e',
+      repo: null,
     },
-    tech: ['Flutter', 'Firestore', 'Dart'],
+    tech: ["Polars", "XGBoost", "CatBoost", "LightGBM", "RidgeCV"],
   },
-  {
-    name: 'PomoDo App',
-    category: 'Mobile APP',
-    desc: 'Connect krishi is a mobile app built with flutter to connect farmers and buyers',
-    link: {
-      demo: null,
-      repo: 'https://github.com/xanyl/PomoDo',
-    },
-    tech: ['java', ],
-  },
-//   {
-//     name: 'Grocery Store App',
-//     category: 'GUI',
-//     desc: 'Admin and cashier view without dbms.',
-//     link: {
-//       demo: 'https://youtu.be/fWjcSKjfsJ0',
-//       repo: null,
-//     },
-//     tech: ['tkinter'],
-//   },
 ];

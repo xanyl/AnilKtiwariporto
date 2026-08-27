@@ -10,7 +10,7 @@ export default function Skills() {
       <Text size={42} weight="bold">
         Skills
       </Text>
-      <Tabs defaultValue="language" variant="pills" color="blue" mt="md">
+      <Tabs defaultValue="languages" variant="pills" color="blue" mt="md">
         <Tabs.List grow>
           {skillCategories.map((category) => (
             <Tabs.Tab value={category.toLowerCase()} key={category} className="text-black dark:text-white hover:dark:bg-blue-300/50 ">
@@ -41,5 +41,4 @@ export default function Skills() {
     </MotionPage>
   );
 }
-
 

@@ -5,9 +5,7 @@ import { Link } from 'react-router-dom';
 import { BiGitRepoForked } from 'react-icons/bi';
 import { FiExternalLink } from 'react-icons/fi';
 
-import getImgUrl from '../../public/assets/getImgUrl';
 import { Project } from '../data/projects/project';
-import { skills } from '../data/skills/skills';
 
 export default function ProjectCard({ data, delay }: { data: Project; delay: number }) {
   const index = delay / 0.2;
@@ -47,22 +45,17 @@ export default function ProjectCard({ data, delay }: { data: Project; delay: num
             )}
           </Box>
         </Box>
-        <Text className="inline-flex items-center w-full h-16 my-3 overflow-hidden break-words">{data.desc}</Text>
+        <Text className="inline-flex min-h-[4rem] w-full items-center my-3 break-words">{data.desc}</Text>
         <Group spacing="xs">
-          {skills
-            .filter((skill) => data.tech.includes(skill.name))
-            .map((skill) => (
-              <Box key={skill.name} sx={{ position: 'relative', height: 25, width: 25 }} title={skill.name}>
-                <img
-                  src={getImgUrl(skill.icon)}
-                  alt={skill.name}
-                  sizes="(max-width: 768px) 8vw,
-                    (max-width: 1200px) 16vw,
-                    32vw"
-                  style={{ pointerEvents: 'none', objectFit: 'contain' }}
-                />
-              </Box>
-            ))}
+          {data.tech.map((technology) => (
+            <Text
+              key={technology}
+              size="xs"
+              className="rounded-full bg-blue-50 px-2 py-1 font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+            >
+              {technology}
+            </Text>
+          ))}
         </Group>
       </div>
     </MotionPage>

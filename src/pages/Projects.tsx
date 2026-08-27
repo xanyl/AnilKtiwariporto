@@ -12,7 +12,7 @@ export default function Projects() {
       <Text size={42} weight="bold">
         Projects
       </Text>
-      <Tabs defaultValue="website" variant="pills" color="blue" mt="md">
+      <Tabs defaultValue="machine learning" variant="pills" color="blue" mt="md">
         <Tabs.List grow>
           {projectCategories.map((category) => (
             <Tabs.Tab value={category.toLowerCase()} key={category} className="text-black dark:text-white hover:dark:bg-blue-500/50 ">

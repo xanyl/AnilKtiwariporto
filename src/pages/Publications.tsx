@@ -51,13 +51,14 @@ export default function ResearchPublication() {
                 This research presents a novel approach to multi-modal deep metric learning by introducing DAAL, a density-aware adaptive line margin loss that dynamically adjusts margin distances according to data density. The method improves the ability of deep learning models to learn similarity measures in scenarios where different modalities (e.g., text, image, or speech) are involved.
               </Text>
               <Text size="sm" color="dimmed" mt={4}>
-                Published on: 2024
+                Published in 2024 - arXiv:2410.05438
               </Text>
               <Text size="md" color="dimmed" mt={4}>
                 Link to full paper:{" "}
                 <a
-                  href="https://arxiv.org/html/2410.05438v2"
+                  href="https://arxiv.org/abs/2410.05438"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="underline text-blue-400 cursor-pointer"
                 >
                   Read Here

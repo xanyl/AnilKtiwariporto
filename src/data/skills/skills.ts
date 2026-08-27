@@ -1,109 +1,56 @@
-import { Skill } from './skill';
+import { Skill } from "./skill";
 
 export const skills: Skill[] = [
-  {
-    name: 'HTML',
-    category: 'Language',
-    icon: 'html.svg',
-  },
-  {
-    name: 'CSS',
-    category: 'Language',
-    icon: 'css.svg',
-  },
-  {
-    name: 'JavaScript',
-    category: 'Language',
-    icon: 'js.svg',
-  },
-  {
-    name: 'TypeScript',
-    category: 'Language',
-    icon: 'ts.svg',
-  },
-  {
-    name: 'Python',
-    category: 'Language',
-    icon: 'python.svg',
-  },
-  {
-    name: 'Dart',
-    category: 'Language',
-    icon: 'dart.svg',
-  },
-  {
-    name: 'React',
-    category: 'Framework/Library',
-    icon: 'react.svg',
-  },
-  {
-    name: 'Redux',
-    category: 'Framework/Library',
-    icon: 'redux.png',
-  },
-  {
-    name: 'Nextjs',
-    category: 'Framework/Library',
-    icon: 'next.svg',
-  },
-  {
-    name: 'Nodejs',
-    category: 'Framework/Library',
-    icon: 'node.svg',
-  },
-  {
-    name: 'Expressjs',
-    category: 'Framework/Library',
-    icon: 'express.svg',
-  },
-  {
-    name: 'Flutter',
-    category: 'Framework/Library',
-    icon: 'flutter.svg',
-  },
-  {
-    name: 'Bootstrap',
-    category: 'UI Framework/Component',
-    icon: 'bootstrap.svg',
-  },
-  {
-    name: 'Tailwind CSS',
-    category: 'UI Framework/Component',
-    icon: 'tailwind.svg',
-  },
-  {
-    name: 'Mantine',
-    category: 'UI Framework/Component',
-    icon: 'mantine.svg',
-  },
-  {
-    name: 'Mysql',
-    category: 'DBMS',
-    icon: 'mysql.svg',
-  },
-  {
-    name: 'Firestore',
-    category: 'DBMS',
-    icon: 'firestore.svg',
-  },
-  {
-    name: 'Vs Code',
-    category: 'Tools',
-    icon: 'vscode.svg',
-  },
-  {
-    name: 'Postman',
-    category: 'Tools',
-    icon: 'postman.svg',
-  },
-  {
-    name: 'XAMPP',
-    category: 'Tools',
-    icon: 'xampp.svg',
-  },
-  {
-    name: 'Figma',
-    category: 'Tools',
-    icon: 'figma.svg',
-  },
+  { name: "Python", category: "Languages", icon: "python.svg" },
+  { name: "SQL", category: "Languages", icon: "mysql.svg" },
+  { name: "JavaScript", category: "Languages", icon: "js.svg" },
+
+  { name: "Apache Airflow", category: "Data Engineering" },
+  { name: "Apache Kafka", category: "Data Engineering" },
+  { name: "Apache Spark", category: "Data Engineering" },
+  { name: "PostgreSQL", category: "Data Engineering" },
+  { name: "ETL / ELT Pipelines", category: "Data Engineering" },
+  { name: "Data Warehousing", category: "Data Engineering" },
+
+  { name: "TensorFlow", category: "Machine Learning" },
+  { name: "PyTorch", category: "Machine Learning" },
+  { name: "Scikit-learn", category: "Machine Learning" },
+  { name: "YOLOv8", category: "Machine Learning" },
+  { name: "OpenCV", category: "Machine Learning" },
+  { name: "Keras", category: "Machine Learning" },
+  { name: "Pandas", category: "Machine Learning" },
+  { name: "NumPy", category: "Machine Learning" },
+
+  { name: "AWS", category: "Cloud & DevOps" },
+  { name: "Azure", category: "Cloud & DevOps" },
+  { name: "Docker", category: "Cloud & DevOps" },
+  { name: "Kubernetes", category: "Cloud & DevOps" },
+  { name: "Terraform", category: "Cloud & DevOps" },
+  { name: "GitHub Actions", category: "Cloud & DevOps", icon: "ci.svg" },
+  { name: "Linux", category: "Cloud & DevOps" },
+
+  { name: "React", category: "Automation", icon: "react.svg" },
+  { name: "Next.js", category: "Automation", icon: "next.svg" },
+  { name: "React Native", category: "Automation", icon: "react.svg" },
+  { name: "n8n", category: "Automation" },
+  { name: "LangChain", category: "Automation" },
+  { name: "REST APIs", category: "Automation", icon: "postman.svg" },
+
+  // Kept for technology badges on legacy project cards, but hidden from the
+  // resume-aligned Skills page.
+  { name: "HTML", category: "Languages", icon: "html.svg", show: false },
+  { name: "CSS", category: "Languages", icon: "css.svg", show: false },
+  { name: "TypeScript", category: "Languages", icon: "ts.svg", show: false },
+  { name: "Dart", category: "Languages", icon: "dart.svg", show: false },
+  { name: "java", category: "Languages", icon: "java.svg", show: false },
+  { name: "Redux", category: "Automation", icon: "redux.png", show: false },
+  { name: "Nextjs", category: "Automation", icon: "next.svg", show: false },
+  { name: "Nodejs", category: "Automation", icon: "node.svg", show: false },
+  { name: "Expressjs", category: "Automation", icon: "express.svg", show: false },
+  { name: "Flutter", category: "Automation", icon: "flutter.svg", show: false },
+  { name: "Bootstrap", category: "Automation", icon: "bootstrap.svg", show: false },
+  { name: "Tailwind CSS", category: "Automation", icon: "tailwind.svg", show: false },
+  { name: "Mantine", category: "Automation", icon: "mantine.svg", show: false },
+  { name: "Mysql", category: "Data Engineering", icon: "mysql.svg", show: false },
+  { name: "Firestore", category: "Data Engineering", icon: "firestore.svg", show: false },
 ];

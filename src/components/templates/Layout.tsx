@@ -9,8 +9,8 @@ export default function Layout({ children }: { children: JSX.Element }) {
   const location = useLocation();
   const format = FormatCapitalize(location.pathname.replace("/", ""));
   const title = format
-    ? format + " | Anil K Tiwari"
-    : "Anil K Tiwari | Full Stack Developer";
+    ? format + " | Anil Kumar Tiwari"
+    : "Anil Kumar Tiwari | Data Engineer";
   return (
     <main className="">
       <Helmet>

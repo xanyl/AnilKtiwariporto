@@ -56,7 +56,6 @@ export default function ContactForm() {
         // icon: <BsFillCheckCircleFill />,
         autoClose: 3000,
       });
-      // eslint-disable-next-line
     } catch (error) {
       console.error(error);
       notifications.update({

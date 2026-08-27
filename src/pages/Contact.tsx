@@ -1,7 +1,7 @@
 import { Text, Timeline, Tooltip } from "@mantine/core";
 // import { AiOutlineMessage, FaTiktok, FiGithub, FiInstagram, GrLinkedinOption, RiUserFollowLine } from 'react-icons';
 import MotionPage from "../components/MotionPage";
-import { FiGithub, FiInstagram } from "react-icons/fi";
+import { FiGithub, FiMail } from "react-icons/fi";
 import { FaLinkedin } from "react-icons/fa";
 import ContactForm from "../components/ContactForm";
 import { RiUserFollowLine } from "react-icons/ri";
@@ -30,17 +30,17 @@ export default function Contact() {
           <div className="flex justify-start items-center gap-5">
             <MotionPage delay={0.7} type="bottom">
               <Tooltip
-                label="Instagram"
+                label="Email"
                 color="gray"
                 withArrow
                 position="bottom"
               >
                 <a
-                  href="https://www.instagram.com/"
-                  target="_blank"
-                  className="inline-block box-content bg-white p-2 border rounded-lg text-2xl text-gray-600 hover:text-white hover:bg-gradient-to-br hover:from-purple-600 hover:via-pink-500 hover:to-red-500 transition-all shadow-md hover:shadow-none"
+                  href="mailto:aneelktiwari@gmail.com"
+                  aria-label="Email Anil Kumar Tiwari"
+                  className="inline-block box-content bg-white p-2 border rounded-lg text-2xl text-gray-600 hover:text-white hover:bg-blue-600 transition-all shadow-md hover:shadow-none"
                 >
-                  <FiInstagram />
+                  <FiMail />
                 </a>
               </Tooltip>
             </MotionPage>
@@ -49,6 +49,7 @@ export default function Contact() {
                 <a
                   href="https://github.com/xanyl"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-block box-content bg-white p-2 border rounded-lg text-2xl text-gray-600 hover:text-white hover:bg-black transition-all shadow-md hover:shadow-none"
                 >
                   <FiGithub />
@@ -65,6 +66,7 @@ export default function Contact() {
                 <a
                   href="https://www.linkedin.com/in/anilktiwari/"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-block box-content bg-white p-2 border rounded-lg text-2xl text-gray-600 hover:text-white hover:bg-[#0A66C2] transition-all shadow-md hover:shadow-none"
                 >
                   <FaLinkedin />
