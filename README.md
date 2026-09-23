@@ -64,4 +64,6 @@ src/
 
 ## Deploy
 
-Static build; `vercel.json` rewrites everything to `index.html`.
+Static build hosted on Netlify (`netlify.toml`): SPA fallback to
+`index.html`, apex/`www` redirect, security headers, and long-lived
+caching for fingerprinted assets.
