@@ -1,24 +1,132 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
   <meta charset="UTF-8" />
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Portfolio of Anil Kumar Tiwari, a data engineer and M.S. Computer Science student working across data platforms, machine learning, and AI systems." />
-  <title>Anil Kumar Tiwari | Data Engineer</title>
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0b0d0f" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
+
+  <title>Anil Kumar Tiwari — AI &amp; Data Engineer · Researcher</title>
+  <meta name="description"
+    content="Anil Kumar Tiwari is an AI and data engineer and researcher in Atlanta, GA, with 2+ years building scalable data architectures, production ML pipelines and LLM integrations. M.S. Computer Science at Georgia State University." />
+  <meta name="author" content="Anil Kumar Tiwari" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://tiwarianil.com.np/" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/anil.JPG" />
+  <link rel="alternate" type="application/pdf" href="/Resume_Anil.pdf" title="Resume — Anil Kumar Tiwari" />
+
+  <meta property="og:type" content="profile" />
+  <meta property="og:site_name" content="Anil Kumar Tiwari" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Anil Kumar Tiwari — AI &amp; Data Engineer · Researcher" />
+  <meta property="og:description"
+    content="Scalable data architectures, production ML pipelines and LLM integrations. M.S. Computer Science at Georgia State University." />
+  <meta property="og:url" content="https://tiwarianil.com.np/" />
+  <meta property="og:image" content="https://tiwarianil.com.np/assets/anil.JPG" />
+  <meta property="og:image:alt" content="Portrait of Anil Kumar Tiwari" />
+  <meta property="profile:first_name" content="Anil" />
+  <meta property="profile:last_name" content="Tiwari" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Anil Kumar Tiwari — AI &amp; Data Engineer · Researcher" />
+  <meta name="twitter:description"
+    content="Scalable data architectures, production ML pipelines and LLM integrations." />
+  <meta name="twitter:image" content="https://tiwarianil.com.np/assets/anil.JPG" />
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "https://tiwarianil.com.np/#person",
+          "name": "Anil Kumar Tiwari",
+          "givenName": "Anil",
+          "familyName": "Tiwari",
+          "url": "https://tiwarianil.com.np/",
+          "image": "https://tiwarianil.com.np/assets/anil.JPG",
+          "email": "mailto:aneelktiwari@gmail.com",
+          "telephone": "+1-470-219-8395",
+          "jobTitle": ["AI Engineer", "Data Engineer", "Researcher"],
+          "description": "AI engineer, data engineer and researcher with 2+ years building scalable data architectures, production ML pipelines and LLM integrations.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Atlanta",
+            "addressRegion": "GA",
+            "addressCountry": "US"
+          },
+          "alumniOf": {
+            "@type": "CollegeOrUniversity",
+            "name": "Georgia State University",
+            "sameAs": "https://www.gsu.edu/"
+          },
+          "worksFor": {
+            "@type": "CollegeOrUniversity",
+            "name": "Georgia State University"
+          },
+          "knowsAbout": [
+            "Data Engineering", "Machine Learning", "Large Language Models",
+            "Apache Airflow", "AWS Redshift", "Apache Spark", "Apache Kafka",
+            "PyTorch", "TensorFlow", "Kubernetes", "Docker", "Terraform",
+            "ETL Pipelines", "Data Warehousing", "Computer Vision", "Python", "SQL"
+          ],
+          "sameAs": [
+            "https://github.com/xanyl",
+            "https://www.linkedin.com/in/anilktiwari/"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://tiwarianil.com.np/#website",
+          "url": "https://tiwarianil.com.np/",
+          "name": "Anil Kumar Tiwari",
+          "inLanguage": "en-US",
+          "about": { "@id": "https://tiwarianil.com.np/#person" },
+          "publisher": { "@id": "https://tiwarianil.com.np/#person" }
+        },
+        {
+          "@type": "ProfilePage",
+          "url": "https://tiwarianil.com.np/",
+          "mainEntity": { "@id": "https://tiwarianil.com.np/#person" }
+        },
+        {
+          "@type": "ScholarlyArticle",
+          "name": "DAAL: Density-Aware Adaptive Line Margin Loss for Multi-Modal Deep Metric Learning",
+          "url": "https://arxiv.org/abs/2410.05438",
+          "author": { "@id": "https://tiwarianil.com.np/#person" }
+        }
+      ]
+    }
+  </script>
+
+  <!-- Resolve the theme before first paint so there is no flash. -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('akt-theme');
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) { /* keep the dark default */ }
+    })();
+  </script>
 </head>
 
 <body>
   <div id="root"></div>
-  <script>
-    window.embeddedChatbotConfig = {
-      chatbotId: "_RDSatBmwrUH5PpJ7SiW6",
-      domain: "www.chatbase.co"
-    }
-  </script>
-  <script src="https://www.chatbase.co/embed.min.js" chatbotId="_RDSatBmwrUH5PpJ7SiW6" domain="www.chatbase.co" defer>
-  </script>
+  <noscript>
+    <h1>Anil Kumar Tiwari</h1>
+    <p>AI engineer, data engineer and researcher in Atlanta, GA. M.S. Computer Science, Georgia State University.</p>
+    <p><a href="/Resume_Anil.pdf">Download resume (PDF)</a> &middot;
+      <a href="https://github.com/xanyl">GitHub</a> &middot;
+      <a href="https://www.linkedin.com/in/anilktiwari/">LinkedIn</a> &middot;
+      <a href="mailto:aneelktiwari@gmail.com">aneelktiwari@gmail.com</a>
+    </p>
+  </noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
