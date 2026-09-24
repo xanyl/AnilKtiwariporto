@@ -33,6 +33,19 @@ export interface CommandContext {
   fetchAuditLog: () => Promise<{ ok: true; log: AuditEntry[] } | { ok: false; error: string }>;
   history: string[];
   bootedAt: number;
+  postWall: (
+    name: string,
+    message: string
+  ) => Promise<{ ok: true; entry: WallEntry } | { ok: false; error: string }>;
+  fetchWall: () => Promise<{ ok: true; entries: WallEntry[] } | { ok: false; error: string }>;
+  deleteWall: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+}
+
+export interface WallEntry {
+  id: string;
+  name: string;
+  message: string;
+  at: string;
 }
 
 export interface AuditEntry {

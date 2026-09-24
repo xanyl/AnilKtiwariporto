@@ -1,5 +1,6 @@
 import { safeHref } from "../data/sanitize";
 import { getField } from "../data/store";
+import { getWallHandle, setWallHandle } from "./wallHandle";
 import type { Command, Line } from "./types";
 import { accent, art, dim, err, out } from "./types";
 import {
@@ -14,6 +15,16 @@ import {
 } from "./vfs";
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+function relativeTime(iso: string): string {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
 
 /** Wraps prose to a column so long bullets stay readable in the terminal. */
 function wrap(text: string, width = 76, indent = ""): string[] {
@@ -256,6 +267,7 @@ export const commands: Command[] = [
       dim("  Tab completes - Up/Down recalls history - Esc closes the terminal"),
       dim("  cd/ls/pwd/cat/nano walk a real /resume filesystem - `login` to edit it"),
       dim("  chain commands with `;` or `&&` - `man <command>` for details"),
+      dim("  `wall <message>` signs the guestbook - `wall` alone reads it"),
       out(),
     ],
   },
@@ -485,6 +497,57 @@ export const commands: Command[] = [
         ),
         out(),
       ];
+    },
+  },
+  {
+    name: "wall",
+    summary: "Read or sign the guestbook",
+    usage: "wall [message] | wall --as <name> [message] | wall --delete <id>",
+    run: async (argv, ctx) => {
+      if (argv[0] === "--delete" || argv[0] === "-d") {
+        if (!ctx.loggedIn) return [err("wall: permission denied"), dim("run `login` first")];
+        const id = argv[1];
+        if (!id) return [err("wall: missing id"), dim("usage: wall --delete <id>")];
+        const result = await ctx.deleteWall(id);
+        return result.ok ? [dim(`deleted ${id}`)] : [err(`wall: ${result.error}`)];
+      }
+
+      let name = getWallHandle();
+      let rest = argv;
+      if (argv[0] === "--as") {
+        const newName = argv[1];
+        if (!newName) {
+          return [err("wall: --as needs a name"), dim("usage: wall --as <name> [message]")];
+        }
+        name = newName;
+        setWallHandle(name);
+        rest = argv.slice(2);
+      }
+
+      const message = rest.join(" ").trim();
+
+      if (!message) {
+        const result = await ctx.fetchWall();
+        if (!result.ok) return [err(`wall: ${result.error}`)];
+        if (result.entries.length === 0) {
+          return [out(), dim("the wall is empty - be the first: wall <message>"), out()];
+        }
+        return [
+          out(),
+          ...result.entries.slice(0, 20).flatMap((e) => [
+            accent(`${e.name}  ·  ${relativeTime(e.at)}`),
+            out(`  ${e.message}`),
+            ...(ctx.loggedIn ? [dim(`  id: ${e.id}`)] : []),
+          ]),
+          out(),
+          dim(`signed in as ${name} - change with \`wall --as <name>\``),
+          ...(ctx.loggedIn ? [dim("logged in - `wall --delete <id>` removes an entry")] : []),
+          out(),
+        ];
+      }
+
+      const result = await ctx.postWall(name, message);
+      return result.ok ? [dim(`posted to the wall as ${name}`)] : [err(`wall: ${result.error}`)];
     },
   },
   {

@@ -48,3 +48,12 @@ export function bearerToken(req: Request): string | null {
   const [scheme, token] = header.split(" ");
   return scheme === "Bearer" && token ? token : null;
 }
+
+/**
+ * Rate-limit buckets need a stable per-visitor key, but there's no reason to
+ * keep raw IPs sitting in Blobs — an HMAC gives the same dedup/lockout
+ * behavior without persisting anything that identifies a real address.
+ */
+export function hashIp(ip: string): string {
+  return crypto.createHmac("sha256", secret()).update(`ip:${ip}`).digest("base64url");
+}

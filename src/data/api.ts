@@ -88,3 +88,42 @@ export async function fetchAuditLog(token: string): Promise<AuditEntry[]> {
   const body = await res.json();
   return (body?.log ?? []) as AuditEntry[];
 }
+
+export interface WallEntry {
+  id: string;
+  name: string;
+  message: string;
+  at: string;
+}
+
+export async function fetchWall(): Promise<WallEntry[]> {
+  const res = await fetch("/api/guestbook");
+  if (!res.ok) return [];
+  const body = await res.json().catch(() => ({}));
+  return (body?.entries ?? []) as WallEntry[];
+}
+
+export async function postWall(name: string, message: string): Promise<WallEntry> {
+  const res = await fetch("/api/guestbook", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name, message }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `post failed (${res.status})`);
+  }
+  const body = await res.json();
+  return body.entry as WallEntry;
+}
+
+export async function deleteWallEntry(token: string, id: string): Promise<void> {
+  const res = await fetch(`/api/guestbook?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `delete failed (${res.status})`);
+  }
+}

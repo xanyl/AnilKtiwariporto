@@ -95,3 +95,26 @@ export const RESUME_FIELD_SCHEMAS = {
 } as const;
 
 export type ResumeFieldName = keyof typeof RESUME_FIELD_SCHEMAS;
+
+// Disallow non-printing/control characters (tabs and newlines excepted) and
+// anything URL-shaped, so the guestbook can't carry hidden payloads or
+// become a free link-spam board.
+const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
+const URL_LIKE = /https?:\/\/|www\./i;
+const noControlChars = (v: string) => !CONTROL_CHARS.test(v);
+
+export const guestbookPostSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .refine(noControlChars, "name has invalid characters"),
+  message: z
+    .string()
+    .trim()
+    .min(1)
+    .max(300)
+    .refine(noControlChars, "message has invalid characters")
+    .refine((v) => !URL_LIKE.test(v), "links aren't allowed in the guestbook"),
+});

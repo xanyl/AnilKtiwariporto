@@ -6,7 +6,7 @@ import type { ResumeField } from "../data/store";
 import useReducedMotion from "../hooks/useReducedMotion";
 import type { Theme } from "../hooks/useTheme";
 import { commandNames, findCommand } from "../terminal/commands";
-import type { AuditEntry, EditRequest, Line } from "../terminal/types";
+import type { AuditEntry, EditRequest, Line, WallEntry } from "../terminal/types";
 import { accent, dim, err, out } from "../terminal/types";
 import { pathStr } from "../terminal/vfs";
 
@@ -37,6 +37,7 @@ function saveHistory(history: string[]) {
     /* storage unavailable — history just won't survive a reload */
   }
 }
+
 
 const KIND_CLASS: Record<Line["kind"], string> = {
   out: "text-fg",
@@ -183,6 +184,37 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     }
   }, [token]);
 
+  const postWall = useCallback(async (name: string, message: string) => {
+    try {
+      const entry = await authApi.postWall(name, message);
+      return { ok: true as const, entry: entry as WallEntry };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : "post failed" };
+    }
+  }, []);
+
+  const fetchWall = useCallback(async () => {
+    try {
+      const entries = await authApi.fetchWall();
+      return { ok: true as const, entries: entries as WallEntry[] };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : "fetch failed" };
+    }
+  }, []);
+
+  const deleteWall = useCallback(
+    async (id: string) => {
+      if (!token) return { ok: false as const, error: "not logged in" };
+      try {
+        await authApi.deleteWallEntry(token, id);
+        return { ok: true as const };
+      } catch (e) {
+        return { ok: false as const, error: e instanceof Error ? e.message : "delete failed" };
+      }
+    },
+    [token]
+  );
+
   async function runCommand(input: string) {
     const [name, ...argv] = input.split(/\s+/);
     const cmd = findCommand(name.toLowerCase());
@@ -204,6 +236,9 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
       logout,
       resetRemote,
       fetchAuditLog,
+      postWall,
+      fetchWall,
+      deleteWall,
       history,
       bootedAt,
       requestEdit: (req) => {
@@ -551,7 +586,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
         )}
 
         <div className="shrink-0 border-t border-line bg-surface px-3 py-1.5 font-mono text-2xs text-faint">
-          help · ls · cd · cat &lt;file&gt; · nano &lt;file&gt; · login · man &lt;cmd&gt; · exit
+          help · ls · cd · cat &lt;file&gt; · nano &lt;file&gt; · wall · login · exit
         </div>
       </div>
     </div>

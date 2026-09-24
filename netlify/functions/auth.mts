@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
-import { signSession } from "./lib/session.mts";
+import { hashIp, signSession } from "./lib/session.mts";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -39,9 +39,8 @@ export default async (req: Request, context: Context) => {
     return json({ error: "auth is not configured on this deploy" }, 500);
   }
 
-  const ip = context.ip || "unknown";
   const guard = getStore("auth-guard");
-  const key = `attempts:${ip}`;
+  const key = `attempts:${hashIp(context.ip || "unknown")}`;
   const now = Date.now();
   const state = ((await guard.get(key, { type: "json" })) as GuardState | null) ?? {
     count: 0,

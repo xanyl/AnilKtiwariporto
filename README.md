@@ -17,7 +17,8 @@ Three ways to navigate it:
 The terminal is a real shell over a small virtual filesystem (`/resume`,
 `/scratch`): `help`, `neofetch`, `whoami`, `date`, `uptime`, `uname`, `id`,
 `env`, `history`, `man <command>`, `pwd`, `cd`, `ls -la`, `cat <path>`,
-`nano <path>` (aliased as `edit`), `reset <file>`, `log` (edit audit trail), `mkdir`, `touch`,
+`nano <path>` (aliased as `edit`), `reset <file>`, `log` (edit audit trail), `wall`
+(guestbook), `mkdir`, `touch`,
 `rm`, `grep <term>`, `open <target>`, `resume`, `login`, `logout`, `theme`,
 `clear` and `exit` — chainable with `;` / `&&`, with path-aware tab
 completion and command history persisted across reloads (except `login`
@@ -59,6 +60,29 @@ netlify env:set AUTH_SECRET "$(openssl rand -hex 32)"
 Locally, put the same two variables in a `.env` file (already gitignored) and
 run `npm run dev:full` (uses the Netlify CLI so the functions and Blobs
 emulator run alongside Vite — plain `npm run dev` won't have `/api/*`).
+
+### Guestbook
+
+`wall <message>` signs a public guestbook, like the real Unix `wall(1)`
+(which broadcasts a message to every open terminal) — no login required.
+`wall` alone reads the last 20 entries. A per-browser handle is generated
+on first use (`guest-xxxx`) and remembered in `localStorage`; change it with
+`wall --as <name> [message]`. Entries are public and moderatable, never
+private, so:
+
+- **Rate-limited per visitor**: a 15-second gap between posts and an 8/hour
+  cap, keyed by an HMAC of the IP (`hashIp` in `lib/session.mts`) rather than
+  the raw address — the limiter works without Blobs ever storing something
+  that identifies a real visitor.
+- **Validated against abuse** (`guestbookPostSchema`, Zod): 1–300 characters,
+  no control characters, no `http(s)://`/`www.` (blocks link-spam outright).
+- **Bounded storage**: capped at the 300 most recent entries; older ones are
+  evicted automatically.
+- **Admin moderation**: `wall --delete <id>` (shown next to each entry while
+  logged in) removes an entry via the same session token as the editor, and
+  every deletion is appended to its own append-only log in Blobs.
+- Entries never carry IP or any other visitor metadata in the API response —
+  only a display name, message, id, and timestamp are ever public.
 
 ### Hardening
 
@@ -128,16 +152,18 @@ src/
 netlify/functions/
   auth.mts            POST /api/auth — rate-limited password check, issues a session token
   resume-data.mts     GET/PUT/DELETE /api/resume-data — validated, audited, Blobs-backed store
-  lib/session.mts     HMAC session signing/verification (AUTH_SECRET)
-  lib/schema.mts      Zod schemas + URL-scheme allowlist for every editable field
+  guestbook.mts       GET/POST/DELETE /api/guestbook — rate-limited, moderated wall(1)-style guestbook
+  lib/session.mts     HMAC session signing/verification (AUTH_SECRET) + hashIp for rate-limit keys
+  lib/schema.mts      Zod schemas + URL-scheme allowlist for every editable field and the guestbook
 ```
 
 ## Deploy
 
 Static build hosted on Netlify (`netlify.toml`): SPA fallback to
 `index.html`, apex/`www` redirect, security headers, long-lived caching for
-fingerprinted assets, and two serverless Functions (`/api/auth`,
-`/api/resume-data`) backing the terminal's login/edit feature. Requires the
+fingerprinted assets, and three serverless Functions (`/api/auth`,
+`/api/resume-data`, `/api/guestbook`) backing the terminal's login/edit and
+guestbook features. Requires the
 `ADMIN_PASSWORD` and `AUTH_SECRET` environment variables to be set on the site
 (see above) — without them, `/api/auth` responds 500 and the site falls back
 to read-only defaults.
