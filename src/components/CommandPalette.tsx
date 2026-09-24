@@ -13,8 +13,8 @@ import {
   FiTerminal,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
-import { profile, publications } from "../data/resume";
 import type { SectionMeta } from "../data/resume";
+import { useResumeField } from "../data/store";
 import type { Theme } from "../hooks/useTheme";
 
 interface Command {
@@ -56,6 +56,8 @@ export default function CommandPalette({
   onOpenTerminal,
   suspended = false,
 }: Props) {
+  const profile = useResumeField("profile");
+  const publications = useResumeField("publications");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
@@ -156,7 +158,7 @@ export default function CommandPalette({
     ];
 
     return [...jumps, ...actions];
-  }, [sections, theme, onToggleTheme, onOpenTerminal, copied]);
+  }, [sections, theme, onToggleTheme, onOpenTerminal, copied, profile, publications]);
 
   const results = useMemo(
     () => commands.filter((c) => matches(query, `${c.label} ${c.hint}`)),

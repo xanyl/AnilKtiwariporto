@@ -1,9 +1,10 @@
 import { FiExternalLink } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
-import { publications } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 export default function Publications({ index }: { index: number }) {
+  const publications = useResumeField("publications");
   return (
     <Section id="publications" index={index} label="publications">
       <ul className="space-y-4">

@@ -1,8 +1,9 @@
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
-import { summary } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 export default function Summary({ index }: { index: number }) {
+  const summary = useResumeField("summary");
   return (
     <Section id="summary" index={index} label="summary">
       <Reveal>

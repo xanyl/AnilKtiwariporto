@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import CommandPalette from "./components/CommandPalette";
 import Terminal from "./components/Terminal";
 import TopBar from "./components/nav/TopBar";
+import { fetchOverrides } from "./data/api";
 import { sections } from "./data/resume";
+import { applyOverrides } from "./data/store";
 import useGithub from "./hooks/useGithub";
 import useKeyboardNav from "./hooks/useKeyboardNav";
 import useScrollSpy from "./hooks/useScrollSpy";
@@ -44,6 +46,13 @@ export default function App() {
 
   const openTerminal = useCallback(() => setTerminalOpen(true), []);
   const closeTerminal = useCallback(() => setTerminalOpen(false), []);
+
+  // Pull any edits saved from the terminal so the live site reflects them on load.
+  useEffect(() => {
+    fetchOverrides().then((overrides) => {
+      if (Object.keys(overrides).length) applyOverrides(overrides);
+    });
+  }, []);
 
   // Ctrl+` is the conventional "drop to shell" binding.
   useEffect(() => {

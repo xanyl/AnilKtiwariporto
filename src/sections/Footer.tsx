@@ -1,6 +1,7 @@
-import { profile } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 export default function Footer() {
+  const profile = useResumeField("profile");
   return (
     <footer className="border-t border-line py-6 font-mono text-2xs text-faint">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

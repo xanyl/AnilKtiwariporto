@@ -2,7 +2,7 @@ import { FiArrowUpRight, FiStar } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
 import languageColor from "../data/languageColors";
-import { profile } from "../data/resume";
+import { useResumeField } from "../data/store";
 import type { GithubData } from "../hooks/useGithub";
 
 function relative(iso: string) {
@@ -21,6 +21,7 @@ interface Props {
 
 /** Live public GitHub activity. App only renders this once data has arrived. */
 export default function Github({ index, data }: Props) {
+  const profile = useResumeField("profile");
 
   const stats = [
     { value: String(data.repoCount), label: "Public Repos" },

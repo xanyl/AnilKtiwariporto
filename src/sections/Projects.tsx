@@ -3,9 +3,10 @@ import MetricStrip from "../components/Metric";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
 import Tag from "../components/Tag";
-import { projects } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 export default function Projects({ index }: { index: number }) {
+  const projects = useResumeField("projects");
   return (
     <Section id="projects" index={index} label="projects">
       <div className="space-y-8">

@@ -1,15 +1,16 @@
-import {
-  certificates,
-  education,
-  experience,
-  profile,
-  projects,
-  publications,
-  skillGroups,
-  summary,
-} from "../data/resume";
+import { getField } from "../data/store";
 import type { Command, Line } from "./types";
 import { accent, art, dim, err, out } from "./types";
+import {
+  fieldIsCustomized,
+  normalize,
+  pathStr,
+  resetResumeFile,
+  resolve,
+  scratchRemove,
+  scratchTouch,
+  scratchWrite,
+} from "./vfs";
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -41,12 +42,18 @@ const LOGO = [
 ];
 
 function neofetch(): Line[] {
+  const profile = getField("profile");
+  const experience = getField("experience");
+  const projects = getField("projects");
+  const publications = getField("publications");
+  const certificates = getField("certificates");
+
   const info: [string, string][] = [
     ["user", profile.handle],
     ["title", profile.roles.join(" / ")],
     ["location", profile.location],
     ["school", "Georgia State University (M.S. CS, 2027)"],
-    ["exp", `${experience.length} roles - ${experience[experience.length - 1].start} to present`],
+    ["exp", `${experience.length} roles - ${experience[experience.length - 1]?.start ?? "n/a"} to present`],
     ["projects", String(projects.length)],
     ["papers", String(publications.length)],
     ["certs", String(certificates.length)],
@@ -75,12 +82,12 @@ function neofetch(): Line[] {
 function catSection(name: string): Line[] {
   switch (name) {
     case "summary":
-      return [out(), ...wrap(summary).map(out), out()];
+      return [out(), ...wrap(getField("summary")).map(out), out()];
 
     case "experience":
       return [
         out(),
-        ...experience.flatMap((j) => [
+        ...getField("experience").flatMap((j) => [
           accent(`${j.role} @ ${j.org}`),
           dim(`  ${j.start} - ${j.end}   [${j.stack.join(", ")}]`),
           ...bullets(j.bullets),
@@ -91,7 +98,7 @@ function catSection(name: string): Line[] {
     case "projects":
       return [
         out(),
-        ...projects.flatMap((p) => [
+        ...getField("projects").flatMap((p) => [
           accent(p.name),
           dim(`  ${p.blurb}`),
           dim(`  ${p.metrics.map((m) => `${m.value} ${m.label}`).join("  |  ")}`),
@@ -104,7 +111,7 @@ function catSection(name: string): Line[] {
     case "skills":
       return [
         out(),
-        ...skillGroups.flatMap((g) => [
+        ...getField("skillGroups").flatMap((g) => [
           accent(g.label),
           ...wrap(g.items.join(", "), 74, "  ").map(out),
           out(),
@@ -114,25 +121,26 @@ function catSection(name: string): Line[] {
     case "education":
       return [
         out(),
-        ...education.map((e) => out(`${e.degree} - ${e.school} (${e.detail})`)),
+        ...getField("education").map((e) => out(`${e.degree} - ${e.school} (${e.detail})`)),
         out(),
       ];
 
     case "certifications":
       return [
         out(),
-        ...certificates.map((c) => out(`${c.issued.padEnd(10)} ${c.title} - ${c.issuer}`)),
+        ...getField("certificates").map((c) => out(`${c.issued.padEnd(10)} ${c.title} - ${c.issuer}`)),
         out(),
       ];
 
     case "publications":
       return [
         out(),
-        ...publications.flatMap((p) => [accent(p.title), dim(`  ${p.venue} - ${p.url}`)]),
+        ...getField("publications").flatMap((p) => [accent(p.title), dim(`  ${p.venue} - ${p.url}`)]),
         out(),
       ];
 
-    case "contact":
+    case "contact": {
+      const profile = getField("profile");
       return [
         out(),
         out(`email     ${profile.email}`),
@@ -142,6 +150,7 @@ function catSection(name: string): Line[] {
         out(`location  ${profile.location}`),
         out(),
       ];
+    }
 
     default:
       return [err(`cat: ${name}: no such section`), dim("try: ls")];
@@ -161,31 +170,34 @@ const SECTIONS = [
 
 /** Everything grep searches, tagged with where it came from. */
 function corpus(): [string, string][] {
-  const rows: [string, string][] = [["summary", summary]];
-  experience.forEach((j) => {
+  const rows: [string, string][] = [["summary", getField("summary")]];
+  getField("experience").forEach((j) => {
     rows.push([`experience/${slug(j.org)}`, `${j.role} ${j.org} ${j.stack.join(" ")}`]);
     j.bullets.forEach((b) => rows.push([`experience/${slug(j.org)}`, b]));
   });
-  projects.forEach((p) => {
+  getField("projects").forEach((p) => {
     rows.push([`projects/${slug(p.name)}`, `${p.name} ${p.blurb} ${p.stack.join(" ")}`]);
     p.bullets.forEach((b) => rows.push([`projects/${slug(p.name)}`, b]));
   });
-  skillGroups.forEach((g) => rows.push([`skills/${slug(g.label)}`, g.items.join(" ")]));
-  certificates.forEach((c) => rows.push(["certifications", `${c.title} ${c.issuer}`]));
-  publications.forEach((p) => rows.push(["publications", `${p.title} ${p.venue}`]));
+  getField("skillGroups").forEach((g) => rows.push([`skills/${slug(g.label)}`, g.items.join(" ")]));
+  getField("certificates").forEach((c) => rows.push(["certifications", `${c.title} ${c.issuer}`]));
+  getField("publications").forEach((p) => rows.push(["publications", `${p.title} ${p.venue}`]));
   return rows;
 }
 
-const OPEN_TARGETS: Record<string, string> = {
-  github: profile.github,
-  linkedin: profile.linkedin,
-  resume: profile.resume,
-  site: "/",
-  ...Object.fromEntries(publications.map((p) => ["paper", p.url])),
-  ...Object.fromEntries(
-    projects.filter((p) => p.repo).map((p) => [slug(p.name), p.repo as string])
-  ),
-};
+function openTargets(): Record<string, string> {
+  const profile = getField("profile");
+  return {
+    github: profile.github,
+    linkedin: profile.linkedin,
+    resume: profile.resume,
+    site: "/",
+    ...Object.fromEntries(getField("publications").map((p) => ["paper", p.url])),
+    ...Object.fromEntries(
+      getField("projects").filter((p) => p.repo).map((p) => [slug(p.name), p.repo as string])
+    ),
+  };
+}
 
 export const commands: Command[] = [
   {
@@ -194,11 +206,10 @@ export const commands: Command[] = [
     run: () => [
       out(),
       accent("Available commands"),
-      ...commands.map((c) =>
-        out(`  ${c.name.padEnd(14)} ${c.summary}`)
-      ),
+      ...commands.map((c) => out(`  ${c.name.padEnd(14)} ${c.summary}`)),
       out(),
       dim("  Tab completes - Up/Down recalls history - Esc closes the terminal"),
+      dim("  cd/ls/pwd/cat/edit walk a real /resume filesystem - `login` to edit it"),
       out(),
     ],
   },
@@ -210,30 +221,192 @@ export const commands: Command[] = [
   {
     name: "whoami",
     summary: "Who is this",
-    run: () => [
-      out(),
-      accent(profile.name),
-      out(profile.roles.join(" / ")),
-      dim(`${profile.location} - ${profile.email}`),
-      out(),
-      ...wrap(summary).map(out),
-      out(),
-    ],
+    run: (_argv, ctx) => {
+      const profile = getField("profile");
+      if (ctx.loggedIn) {
+        return [out(), accent("root"), dim("authenticated - write access to /resume"), out()];
+      }
+      return [
+        out(),
+        accent(profile.name),
+        out(profile.roles.join(" / ")),
+        dim(`${profile.location} - ${profile.email}`),
+        out(),
+        ...wrap(getField("summary")).map(out),
+        out(),
+      ];
+    },
+  },
+  {
+    name: "pwd",
+    summary: "Print working directory",
+    run: (_argv, ctx) => [out(pathStr(ctx.cwd))],
+  },
+  {
+    name: "cd",
+    summary: "Change directory",
+    usage: "cd <dir>",
+    args: () => ["/", "..", "resume", "scratch"],
+    run: (argv, ctx) => {
+      const target = argv[0] ?? "/";
+      const next = normalize(ctx.cwd, target);
+      const node = resolve(next);
+      if (!node) return [err(`cd: ${target}: no such directory`)];
+      if (node.kind !== "dir") return [err(`cd: ${target}: not a directory`)];
+      ctx.setCwd(next);
+    },
   },
   {
     name: "ls",
-    summary: "List resume sections",
-    run: () => [out(), out(SECTIONS.join("   ")), out()],
+    summary: "List a directory",
+    usage: "ls [-la] [path]",
+    args: () => ["resume", "scratch", "-la"],
+    run: (argv, ctx) => {
+      const flags = argv.filter((a) => a.startsWith("-"));
+      const target = argv.find((a) => !a.startsWith("-"));
+      const path = target ? normalize(ctx.cwd, target) : ctx.cwd;
+      const node = resolve(path);
+      if (!node) return [err(`ls: ${target ?? pathStr(path)}: no such file or directory`)];
+
+      if (node.kind === "file") {
+        return [out(target ?? node.read().length + " bytes")];
+      }
+
+      const names = node.list();
+      if (!flags.includes("-la") && !flags.includes("-l")) {
+        return [out(), out(names.length ? names.join("   ") : "(empty)"), out()];
+      }
+
+      const lines: Line[] = [out()];
+      for (const name of names) {
+        const child = node.get(name);
+        if (!child) continue;
+        if (child.kind === "dir") {
+          lines.push(out(`drwxr-xr-x  ${String(0).padStart(6)}  ${name}/`));
+        } else {
+          const writable = ctx.loggedIn && child.tracked ? "rw-" : "r--";
+          const custom = path.join("/") === "resume" && fieldIsCustomized(RESUME_LOOKUP[name]);
+          lines.push(
+            out(
+              `-rw-${writable}${writable}  ${String(child.size()).padStart(6)}  ${name}${
+                custom ? "  *" : ""
+              }`
+            )
+          );
+        }
+      }
+      lines.push(out());
+      if (path.join("/") === "resume") lines.push(dim("  * edited from defaults - `reset <file>` to revert"));
+      lines.push(out());
+      return lines;
+    },
   },
   {
     name: "cat",
-    summary: "Print a section",
-    usage: "cat <section>",
-    args: () => SECTIONS,
-    run: (argv) =>
-      argv[0]
-        ? catSection(argv[0].toLowerCase())
-        : [err("cat: missing operand"), dim("usage: cat <section>"), dim(`sections: ${SECTIONS.join(", ")}`)],
+    summary: "Print a file or resume section",
+    usage: "cat <path>",
+    args: () => [...SECTIONS, "resume/summary.txt", "resume/experience.json"],
+    run: (argv, ctx) => {
+      const target = argv[0];
+      if (!target) return [err("cat: missing operand"), dim("usage: cat <path>")];
+
+      if (SECTIONS.includes(target.toLowerCase()) && !target.includes("/")) {
+        return catSection(target.toLowerCase());
+      }
+
+      const path = normalize(ctx.cwd, target);
+      const node = resolve(path);
+      if (!node) return [err(`cat: ${target}: no such file`)];
+      if (node.kind === "dir") return [err(`cat: ${target}: is a directory`)];
+      return [out(), ...node.read().split("\n").map(out), out()];
+    },
+  },
+  {
+    name: "edit",
+    summary: "Edit a file (requires login for /resume)",
+    usage: "edit <path>",
+    args: () => ["resume/summary.txt", "resume/experience.json", "scratch/notes.txt"],
+    run: (argv, ctx) => {
+      const target = argv[0];
+      if (!target) return [err("edit: missing operand"), dim("usage: edit <path>")];
+
+      const path = normalize(ctx.cwd, target);
+      const inScratch = path[0] === "scratch";
+      let node = resolve(path);
+
+      if (!node && inScratch && path.length === 2) {
+        scratchTouch(path[1]);
+        node = resolve(path);
+      }
+      if (!node) return [err(`edit: ${target}: no such file`)];
+      if (node.kind === "dir") return [err(`edit: ${target}: is a directory`)];
+      if (node.tracked && !ctx.loggedIn) {
+        return [err("edit: permission denied"), dim("run `login` first - this file writes to the live site")];
+      }
+
+      const write = node.write;
+      ctx.requestEdit({
+        path: pathStr(path),
+        initialText: node.read(),
+        onSave: async (text) => {
+          if (inScratch) {
+            scratchWrite(path[1], text);
+            return;
+          }
+          if (!write) throw new Error("read-only file");
+          write(text);
+        },
+      });
+      return [dim(`opening ${pathStr(path)} ...`)];
+    },
+  },
+  {
+    name: "reset",
+    summary: "Revert a resume file to its default content",
+    usage: "reset <file>",
+    args: () => Object.keys(RESUME_LOOKUP),
+    run: (argv, ctx) => {
+      if (!ctx.loggedIn) return [err("reset: permission denied"), dim("run `login` first")];
+      const name = argv[0];
+      if (!name) return [err("reset: missing operand"), dim("usage: reset <file>")];
+      const ok = resetResumeFile(name);
+      return ok ? [dim(`${name} reverted to default`)] : [err(`reset: ${name}: not a resume file`)];
+    },
+  },
+  {
+    name: "mkdir",
+    summary: "Create a scratch file placeholder",
+    usage: "mkdir <name>",
+    run: (argv, ctx) => {
+      if (ctx.cwd[0] !== "scratch") return [err("mkdir: only /scratch is writable for directories")];
+      const name = argv[0];
+      if (!name) return [err("mkdir: missing operand")];
+      scratchTouch(`${name}/.keep`);
+      return [dim(`created scratch/${name}/`)];
+    },
+  },
+  {
+    name: "touch",
+    summary: "Create an empty file in scratch",
+    usage: "touch <name>",
+    run: (argv, ctx) => {
+      if (ctx.cwd[0] !== "scratch") return [err("touch: only /scratch is writable")];
+      const name = argv[0];
+      if (!name) return [err("touch: missing operand")];
+      scratchTouch(name);
+      return [];
+    },
+  },
+  {
+    name: "rm",
+    summary: "Remove a file from scratch",
+    usage: "rm <name>",
+    run: (argv, ctx) => {
+      if (ctx.cwd[0] !== "scratch") return [err("rm: only /scratch is writable")];
+      const name = argv[0];
+      if (!name) return [err("rm: missing operand")];
+      return scratchRemove(name) ? [] : [err(`rm: ${name}: no such file`)];
+    },
   },
   {
     name: "grep",
@@ -267,14 +440,15 @@ export const commands: Command[] = [
     name: "open",
     summary: "Open a link in a new tab",
     usage: "open <target>",
-    args: () => Object.keys(OPEN_TARGETS),
+    args: () => Object.keys(openTargets()),
     run: (argv) => {
+      const targets = openTargets();
       const key = (argv[0] ?? "").toLowerCase();
-      const url = OPEN_TARGETS[key];
+      const url = targets[key];
       if (!url) {
         return [
           err(`open: unknown target "${argv[0] ?? ""}"`),
-          dim(`targets: ${Object.keys(OPEN_TARGETS).join(", ")}`),
+          dim(`targets: ${Object.keys(targets).join(", ")}`),
         ];
       }
       window.open(url, "_blank", "noopener");
@@ -286,10 +460,31 @@ export const commands: Command[] = [
     summary: "Download the PDF resume",
     run: () => {
       const a = document.createElement("a");
-      a.href = profile.resume;
+      a.href = getField("profile").resume;
       a.download = "Anil_Kumar_Tiwari_Resume.pdf";
       a.click();
       return [dim("downloading Resume_Anil.pdf ...")];
+    },
+  },
+  {
+    name: "login",
+    summary: "Authenticate to edit the live site",
+    usage: "login <password>",
+    run: async (argv, ctx) => {
+      const password = argv.join(" ");
+      if (!password) return [err("login: missing password"), dim("usage: login <password>")];
+      const result = await ctx.login(password);
+      return result.ok
+        ? [dim("authenticated - write access to /resume granted for this session")]
+        : [err(`login: ${result.error}`)];
+    },
+  },
+  {
+    name: "logout",
+    summary: "End the authenticated session",
+    run: (_argv, ctx) => {
+      ctx.logout();
+      return [dim("logged out")];
     },
   },
   {
@@ -323,12 +518,26 @@ export const commands: Command[] = [
   {
     name: "sudo",
     summary: "Nice try",
-    run: (argv) => [
-      err(`${profile.handle} is not in the sudoers file.`),
-      dim(argv.length ? `This incident (${argv.join(" ")}) has been reported.` : "This incident has been reported."),
-    ],
+    run: (argv, ctx) => {
+      if (ctx.loggedIn) return [dim("you already have write access - just use `edit`")];
+      return [
+        err(`${getField("profile").handle} is not in the sudoers file.`),
+        dim(argv.length ? `This incident (${argv.join(" ")}) has been reported.` : "This incident has been reported."),
+      ];
+    },
   },
 ];
+
+const RESUME_LOOKUP: Record<string, import("../data/store").ResumeField> = {
+  "profile.json": "profile",
+  "summary.txt": "summary",
+  "experience.json": "experience",
+  "projects.json": "projects",
+  "skills.json": "skillGroups",
+  "education.json": "education",
+  "certificates.json": "certificates",
+  "publications.json": "publications",
+};
 
 export const commandNames = commands.map((c) => c.name);
 export function findCommand(name: string) {

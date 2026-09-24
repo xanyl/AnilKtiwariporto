@@ -14,11 +14,46 @@ Three ways to navigate it:
 | `⌘K` / `Ctrl+K` | command palette — jump, copy email, download resume |
 | ``Ctrl+` `` | interactive terminal — a real REPL over the resume data |
 
-The terminal supports `help`, `neofetch`, `whoami`, `ls`, `cat <section>`,
-`grep <term>`, `open <target>`, `resume`, `theme`, `clear` and `exit`, with tab
-completion and command history. Commands are defined in
-`src/terminal/commands.ts` and read the same data as the rendered page, so the
-two can never drift.
+The terminal is a real shell over a small virtual filesystem (`/resume`,
+`/scratch`): `help`, `neofetch`, `whoami`, `pwd`, `cd`, `ls -la`, `cat <path>`,
+`edit <path>`, `reset <file>`, `mkdir`, `touch`, `rm`, `grep <term>`,
+`open <target>`, `resume`, `login`, `logout`, `theme`, `clear` and `exit`, with
+tab completion and command history. Commands are defined in
+`src/terminal/commands.ts` and `src/terminal/vfs.ts`, and read the same live
+store as the rendered page (`src/data/store.ts`), so the two can never drift.
+
+### Editing the site from the terminal
+
+`/resume` holds one file per content section (`summary.txt`,
+`experience.json`, `projects.json`, ...). `cat` reads them, `edit` opens an
+in-terminal editor (Ctrl+S to save, Esc to cancel). Editing is read-only until
+you authenticate:
+
+```
+login <password>
+edit resume/summary.txt
+```
+
+`login` calls the `/api/auth` Netlify Function, which checks the password
+against the `ADMIN_PASSWORD` environment variable (never committed) and
+returns a short-lived signed session token — no password is ever hardcoded in
+the client or the repo. Saved edits are written to Netlify Blobs via
+`/api/resume-data` and merged over the defaults in `src/data/resume.ts` for
+every visitor on load, so a save is a real, if instant, content update to the
+live site. `reset <file>` reverts a section back to its default. The
+`/scratch` directory is a normal writable playground (`mkdir`/`touch`/`rm`)
+that never touches site content — it's just there for the shell to feel real.
+
+**One-time setup, per Netlify site:**
+
+```bash
+netlify env:set ADMIN_PASSWORD 'choose-a-strong-password'
+netlify env:set AUTH_SECRET "$(openssl rand -hex 32)"
+```
+
+Locally, put the same two variables in a `.env` file (already gitignored) and
+run `npm run dev:full` (uses the Netlify CLI so the functions and Blobs
+emulator run alongside Vite — plain `npm run dev` won't have `/api/*`).
 
 ## Stack
 
@@ -31,7 +66,8 @@ two can never drift.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173 — content only, no /api/*
+npm run dev:full # http://localhost:8888 — Netlify CLI, functions + Blobs emulator
 npm run build    # type-check + production build to dist/
 npm run preview  # serve the production build
 npm run lint
@@ -39,10 +75,12 @@ npm run lint
 
 ## Editing content
 
-All resume content lives in **`src/data/resume.ts`** — profile, summary,
+Default resume content lives in **`src/data/resume.ts`** — profile, summary,
 experience, projects, skills, education, certifications, publications, and the
-section list that drives the nav. Nothing else needs to be touched to update
-the site's content.
+section list that drives the nav. These are the fallback values; anything
+saved via the terminal's `login` + `edit` flow (see above) overrides them at
+runtime without a rebuild. Edit `resume.ts` directly for permanent baseline
+changes that ship with the next deploy.
 
 Certificate PDFs live in `certificates/` and are imported by
 `src/data/resume.ts`. The downloadable resume is `public/Resume_Anil.pdf`
@@ -52,18 +90,28 @@ Certificate PDFs live in `certificates/` and are imported by
 
 ```
 src/
-  data/resume.ts      single source of truth for all content
+  data/resume.ts      default content (baseline, ships in the build)
+  data/store.ts        live content store (defaults + terminal overrides)
+  data/api.ts          client for /api/auth and /api/resume-data
   hooks/              theme, scroll-spy, keyboard nav, reduced motion, github
   components/         Section, Reveal, Tag, Metric, TypeLine, CommandPalette,
                       Terminal, nav/TopBar
-  terminal/           command definitions + output primitives
-  sections/           one file per page section
-  App.tsx             composes the sections
+  terminal/           command definitions, virtual filesystem, output primitives
+  sections/           one file per page section (read live content via useResumeField)
+  App.tsx             composes the sections, loads overrides on boot
   index.css           theme tokens, base styles, print stylesheet
+netlify/functions/
+  auth.mts            POST /api/auth — verifies ADMIN_PASSWORD, issues a session token
+  resume-data.mts     GET/PUT/DELETE /api/resume-data — Netlify Blobs-backed content store
+  lib/session.mts     HMAC session signing/verification (AUTH_SECRET)
 ```
 
 ## Deploy
 
 Static build hosted on Netlify (`netlify.toml`): SPA fallback to
-`index.html`, apex/`www` redirect, security headers, and long-lived
-caching for fingerprinted assets.
+`index.html`, apex/`www` redirect, security headers, long-lived caching for
+fingerprinted assets, and two serverless Functions (`/api/auth`,
+`/api/resume-data`) backing the terminal's login/edit feature. Requires the
+`ADMIN_PASSWORD` and `AUTH_SECRET` environment variables to be set on the site
+(see above) — without them, `/api/auth` responds 500 and the site falls back
+to read-only defaults.

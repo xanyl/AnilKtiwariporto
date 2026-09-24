@@ -1,8 +1,9 @@
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
-import { education } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 export default function Education({ index }: { index: number }) {
+  const education = useResumeField("education");
   return (
     <Section id="education" index={index} label="education">
       <div className="space-y-6">

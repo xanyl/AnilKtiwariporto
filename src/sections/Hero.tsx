@@ -1,12 +1,13 @@
 import { FiDownload, FiGithub, FiLinkedin, FiMail, FiPhone, FiTerminal } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import TypeLine from "../components/TypeLine";
-import { profile } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 const linkClass =
   "inline-flex items-center gap-2 rounded-sm border border-line px-3 py-2 font-mono text-2xs text-muted transition-colors hover:border-accent/60 hover:text-fg";
 
 export default function Hero({ onOpenTerminal }: { onOpenTerminal: () => void }) {
+  const profile = useResumeField("profile");
   return (
     <div id="top" className="relative scroll-mt-20 pb-2 pt-8 sm:pt-12">
       <div

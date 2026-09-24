@@ -1,9 +1,10 @@
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
 import Tag from "../components/Tag";
-import { skillGroups } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 export default function Skills({ index }: { index: number }) {
+  const skillGroups = useResumeField("skillGroups");
   return (
     <Section id="skills" index={index} label="skills">
       <div className="space-y-4">

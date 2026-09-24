@@ -1,9 +1,10 @@
 import { FiExternalLink, FiFileText } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
-import { certificates } from "../data/resume";
+import { useResumeField } from "../data/store";
 
 export default function Certifications({ index }: { index: number }) {
+  const certificates = useResumeField("certificates");
   return (
     <Section id="certifications" index={index} label="certifications">
       <ul className="divide-y divide-line border-y border-line">

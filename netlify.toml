@@ -5,7 +5,12 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[functions]
+  directory = "netlify/functions"
+
 # Single-page app: everything resolves to the one document.
+# Functions (matched via their own `path` config, e.g. /api/*) take
+# priority over this catch-all, so it never shadows the API routes.
 [[redirects]]
   from = "/*"
   to = "/index.html"
