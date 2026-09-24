@@ -3,6 +3,7 @@ import MetricStrip from "../components/Metric";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
 import Tag from "../components/Tag";
+import { safeHref } from "../data/sanitize";
 import { useResumeField } from "../data/store";
 
 export default function Projects({ index }: { index: number }) {
@@ -20,7 +21,7 @@ export default function Projects({ index }: { index: number }) {
                 <h3 className="font-mono text-base font-medium">{p.name}</h3>
                 {p.repo && (
                   <a
-                    href={p.repo}
+                    href={safeHref(p.repo)}
                     target="_blank"
                     rel="noreferrer noopener"
                     aria-label={`${p.name} source on GitHub`}

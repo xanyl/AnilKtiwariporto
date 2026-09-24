@@ -1,6 +1,7 @@
 import { FiExternalLink, FiFileText } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
+import { safeHref } from "../data/sanitize";
 import { useResumeField } from "../data/store";
 
 export default function Certifications({ index }: { index: number }) {
@@ -24,7 +25,7 @@ export default function Certifications({ index }: { index: number }) {
                 <span>{c.issued}</span>
                 {c.file && (
                   <a
-                    href={c.file}
+                    href={safeHref(c.file)}
                     target="_blank"
                     rel="noreferrer noopener"
                     aria-label={`Open certificate: ${c.title}`}
@@ -35,7 +36,7 @@ export default function Certifications({ index }: { index: number }) {
                 )}
                 {c.verificationUrl && (
                   <a
-                    href={c.verificationUrl}
+                    href={safeHref(c.verificationUrl)}
                     target="_blank"
                     rel="noreferrer noopener"
                     aria-label={`Verify certificate: ${c.title}`}

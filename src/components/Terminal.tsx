@@ -6,7 +6,7 @@ import type { ResumeField } from "../data/store";
 import useReducedMotion from "../hooks/useReducedMotion";
 import type { Theme } from "../hooks/useTheme";
 import { commandNames, findCommand } from "../terminal/commands";
-import type { EditRequest, Line } from "../terminal/types";
+import type { AuditEntry, EditRequest, Line } from "../terminal/types";
 import { accent, dim, err, out } from "../terminal/types";
 import { pathStr } from "../terminal/vfs";
 
@@ -15,6 +15,28 @@ const BOOT: Line[] = [
   dim("Loading resume from /resume ... ok"),
   out(),
 ];
+
+const HISTORY_KEY = "shell_history";
+/** Never persisted (or replayed via arrow-up) — a real shell's HISTCONTROL would exclude these too. */
+const SECRET_COMMAND = /^login\b/i;
+
+function loadHistory(): string[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history: string[]) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.filter((h) => !SECRET_COMMAND.test(h))));
+  } catch {
+    /* storage unavailable — history just won't survive a reload */
+  }
+}
 
 const KIND_CLASS: Record<Line["kind"], string> = {
   out: "text-fg",
@@ -36,7 +58,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
   const profile = useResumeField("profile");
   const [lines, setLines] = useState<Line[]>([]);
   const [value, setValue] = useState("");
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<string[]>(() => loadHistory());
   const [histIndex, setHistIndex] = useState(-1);
   const [booted, setBooted] = useState(false);
   const [cwd, setCwd] = useState<string[]>([]);
@@ -44,6 +66,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
   const [editing, setEditing] = useState<EditRequest | null>(null);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
+  const [bootedAt] = useState(() => Date.now());
 
   const reduced = useReducedMotion();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -126,16 +149,30 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     setToken(null);
   }, []);
 
-  async function submit(raw: string) {
-    const input = raw.trim();
-    const isLogin = /^login\b/.test(input);
-    print([{ kind: "input", text: `${prompt} ${isLogin ? "login ********" : input}` }]);
-    setValue("");
-    if (!input) return;
+  const resetRemote = useCallback(
+    async (field: string) => {
+      if (!token) return { ok: false as const, error: "not logged in" };
+      try {
+        await authApi.resetFieldRemote(token, field as ResumeField);
+        return { ok: true as const };
+      } catch (e) {
+        return { ok: false as const, error: e instanceof Error ? e.message : "reset failed" };
+      }
+    },
+    [token]
+  );
 
-    setHistory((h) => [input, ...h.filter((x) => x !== input)].slice(0, 50));
-    setHistIndex(-1);
+  const fetchAuditLog = useCallback(async () => {
+    if (!token) return { ok: false as const, error: "not logged in" };
+    try {
+      const log = await authApi.fetchAuditLog(token);
+      return { ok: true as const, log: log as AuditEntry[] };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : "log fetch failed" };
+    }
+  }, [token]);
 
+  async function runCommand(input: string) {
     const [name, ...argv] = input.split(/\s+/);
     const cmd = findCommand(name.toLowerCase());
     if (!cmd) {
@@ -154,12 +191,41 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
       loggedIn,
       login,
       logout,
+      resetRemote,
+      fetchAuditLog,
+      history,
+      bootedAt,
       requestEdit: (req) => {
         setEditing(req);
         setDraft(req.initialText);
       },
     });
     if (result) print(result);
+  }
+
+  async function submit(raw: string) {
+    const input = raw.trim();
+    const hasLogin = /(^|[;&]\s*)login\b/.test(input);
+    print([{ kind: "input", text: `${prompt} ${hasLogin ? "login ********" : input}` }]);
+    setValue("");
+    if (!input) return;
+
+    setHistory((h) => {
+      const next = [input, ...h.filter((x) => x !== input)].slice(0, 50);
+      saveHistory(next);
+      return next;
+    });
+    setHistIndex(-1);
+
+    // Real shells chain with `;` (always) and `&&` (only after success); this
+    // terminal has no real exit codes, so both just run in sequence.
+    const segments = input
+      .split(/&&|;/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const segment of segments) {
+      await runCommand(segment);
+    }
   }
 
   function complete() {
@@ -171,7 +237,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
       return;
     }
     const cmd = findCommand(parts[0].toLowerCase());
-    const options = cmd?.args?.() ?? [];
+    const options = cmd?.args?.(cwd) ?? [];
     const partial = parts[parts.length - 1];
     const hits = options.filter((o) => o.startsWith(partial));
     if (hits.length === 1) setValue([...parts.slice(0, -1), hits[0]].join(" ") + " ");
@@ -332,7 +398,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
         )}
 
         <div className="shrink-0 border-t border-line bg-surface px-3 py-1.5 font-mono text-2xs text-faint">
-          help · ls · cd · cat &lt;file&gt; · edit &lt;file&gt; · login · exit
+          help · ls · cd · cat &lt;file&gt; · edit &lt;file&gt; · login · man &lt;cmd&gt; · exit
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { FiArrowUpRight, FiStar } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
 import languageColor from "../data/languageColors";
+import { safeHref } from "../data/sanitize";
 import { useResumeField } from "../data/store";
 import type { GithubData } from "../hooks/useGithub";
 
@@ -52,7 +53,7 @@ export default function Github({ index, data }: Props) {
           <Reveal key={repo.name} delay={Math.min(i, 5) * 0.03}>
             <li>
               <a
-                href={repo.url}
+                href={safeHref(repo.url)}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="group flex items-baseline gap-3 py-2.5"
@@ -96,7 +97,7 @@ export default function Github({ index, data }: Props) {
 
       <Reveal>
         <a
-          href={profile.github}
+          href={safeHref(profile.github)}
           target="_blank"
           rel="noreferrer noopener"
           className="link-underline mt-4 inline-flex items-center gap-1.5 font-mono text-2xs text-muted hover:text-fg"

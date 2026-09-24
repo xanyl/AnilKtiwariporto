@@ -29,13 +29,24 @@ export interface CommandContext {
   login: (password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   logout: () => void;
   requestEdit: (req: EditRequest) => void;
+  resetRemote: (field: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  fetchAuditLog: () => Promise<{ ok: true; log: AuditEntry[] } | { ok: false; error: string }>;
+  history: string[];
+  bootedAt: number;
+}
+
+export interface AuditEntry {
+  field: string;
+  action: "set" | "reset";
+  at: string;
+  ip: string;
 }
 
 export interface Command {
   name: string;
   summary: string;
   usage?: string;
-  /** Completions for the first argument. */
-  args?: () => string[];
+  /** Completions for the first argument, aware of the current directory. */
+  args?: (cwd: string[]) => string[];
   run: (argv: string[], ctx: CommandContext) => Line[] | void | Promise<Line[] | void>;
 }

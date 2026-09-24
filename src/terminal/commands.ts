@@ -1,3 +1,4 @@
+import { safeHref } from "../data/sanitize";
 import { getField } from "../data/store";
 import type { Command, Line } from "./types";
 import { accent, art, dim, err, out } from "./types";
@@ -185,6 +186,13 @@ function corpus(): [string, string][] {
   return rows;
 }
 
+/** Directory entries at `cwd`, for path-aware tab completion. */
+function dirEntries(cwd: string[]): string[] {
+  const node = resolve(cwd);
+  if (!node || node.kind !== "dir") return [];
+  return node.list();
+}
+
 function openTargets(): Record<string, string> {
   const profile = getField("profile");
   return {
@@ -210,6 +218,7 @@ export const commands: Command[] = [
       out(),
       dim("  Tab completes - Up/Down recalls history - Esc closes the terminal"),
       dim("  cd/ls/pwd/cat/edit walk a real /resume filesystem - `login` to edit it"),
+      dim("  chain commands with `;` or `&&` - `man <command>` for details"),
       out(),
     ],
   },
@@ -238,6 +247,77 @@ export const commands: Command[] = [
     },
   },
   {
+    name: "date",
+    summary: "Show the current date and time",
+    run: () => [out(new Date().toString())],
+  },
+  {
+    name: "uptime",
+    summary: "Show how long this shell session has been open",
+    run: (_argv, ctx) => {
+      const seconds = Math.max(0, Math.round((Date.now() - ctx.bootedAt) / 1000));
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return [out(`up ${m}m ${s}s, 1 user, load average: 0.42, 0.31, 0.27`)];
+    },
+  },
+  {
+    name: "uname",
+    summary: "Print system information",
+    usage: "uname [-a]",
+    args: () => ["-a"],
+    run: (argv) =>
+      argv[0] === "-a"
+        ? [out("Portfolio 6.6.0-portfolio #1 SMP PREEMPT x86_64 GNU/Linux (react-terminal)")]
+        : [out("Portfolio")],
+  },
+  {
+    name: "id",
+    summary: "Print effective user identity",
+    run: (_argv, ctx) =>
+      ctx.loggedIn ? [out("uid=0(root) gid=0(root) groups=0(root)")] : [out("uid=1000(guest) gid=1000(guest) groups=1000(guest)")],
+  },
+  {
+    name: "env",
+    summary: "Print environment variables",
+    run: (_argv, ctx) => [
+      out(`USER=${ctx.loggedIn ? "root" : "guest"}`),
+      out("SHELL=/bin/zsh"),
+      out("TERM=xterm-256color"),
+      out(`HOME=/home/${ctx.loggedIn ? "root" : "guest"}`),
+      out(`EDITOR=${"edit"}`),
+      out(`WRITE_ACCESS=${ctx.loggedIn}`),
+    ],
+  },
+  {
+    name: "history",
+    summary: "Show recent command history",
+    run: (_argv, ctx) => {
+      const items = [...ctx.history].reverse();
+      if (items.length === 0) return [dim("no history yet")];
+      return items.map((cmd, i) => out(`  ${String(i + 1).padStart(4)}  ${cmd}`));
+    },
+  },
+  {
+    name: "man",
+    summary: "Show usage for a command",
+    usage: "man <command>",
+    args: () => commandNames,
+    run: (argv) => {
+      const name = argv[0];
+      if (!name) return [err("man: missing operand"), dim("usage: man <command>")];
+      const cmd = findCommand(name.toLowerCase());
+      if (!cmd) return [err(`man: no manual entry for ${name}`)];
+      return [
+        out(),
+        accent(cmd.name.toUpperCase()),
+        out(`  ${cmd.summary}`),
+        ...(cmd.usage ? [out(), dim("SYNOPSIS"), out(`  ${cmd.usage}`)] : []),
+        out(),
+      ];
+    },
+  },
+  {
     name: "pwd",
     summary: "Print working directory",
     run: (_argv, ctx) => [out(pathStr(ctx.cwd))],
@@ -246,7 +326,7 @@ export const commands: Command[] = [
     name: "cd",
     summary: "Change directory",
     usage: "cd <dir>",
-    args: () => ["/", "..", "resume", "scratch"],
+    args: (cwd) => (cwd.length ? ["..", ...dirEntries(cwd)] : dirEntries(cwd)),
     run: (argv, ctx) => {
       const target = argv[0] ?? "/";
       const next = normalize(ctx.cwd, target);
@@ -260,7 +340,7 @@ export const commands: Command[] = [
     name: "ls",
     summary: "List a directory",
     usage: "ls [-la] [path]",
-    args: () => ["resume", "scratch", "-la"],
+    args: (cwd) => [...dirEntries(cwd), "-la"],
     run: (argv, ctx) => {
       const flags = argv.filter((a) => a.startsWith("-"));
       const target = argv.find((a) => !a.startsWith("-"));
@@ -305,7 +385,7 @@ export const commands: Command[] = [
     name: "cat",
     summary: "Print a file or resume section",
     usage: "cat <path>",
-    args: () => [...SECTIONS, "resume/summary.txt", "resume/experience.json"],
+    args: (cwd) => [...SECTIONS, ...dirEntries(cwd)],
     run: (argv, ctx) => {
       const target = argv[0];
       if (!target) return [err("cat: missing operand"), dim("usage: cat <path>")];
@@ -325,7 +405,7 @@ export const commands: Command[] = [
     name: "edit",
     summary: "Edit a file (requires login for /resume)",
     usage: "edit <path>",
-    args: () => ["resume/summary.txt", "resume/experience.json", "scratch/notes.txt"],
+    args: (cwd) => dirEntries(cwd),
     run: (argv, ctx) => {
       const target = argv[0];
       if (!target) return [err("edit: missing operand"), dim("usage: edit <path>")];
@@ -365,12 +445,34 @@ export const commands: Command[] = [
     summary: "Revert a resume file to its default content",
     usage: "reset <file>",
     args: () => Object.keys(RESUME_LOOKUP),
-    run: (argv, ctx) => {
+    run: async (argv, ctx) => {
       if (!ctx.loggedIn) return [err("reset: permission denied"), dim("run `login` first")];
       const name = argv[0];
       if (!name) return [err("reset: missing operand"), dim("usage: reset <file>")];
-      const ok = resetResumeFile(name);
-      return ok ? [dim(`${name} reverted to default`)] : [err(`reset: ${name}: not a resume file`)];
+      const field = RESUME_LOOKUP[name];
+      if (!field) return [err(`reset: ${name}: not a resume file`)];
+      resetResumeFile(name);
+      const remote = await ctx.resetRemote(field);
+      return remote.ok
+        ? [dim(`${name} reverted to default and synced`)]
+        : [dim(`${name} reverted locally`), err(`sync failed: ${remote.error}`)];
+    },
+  },
+  {
+    name: "log",
+    summary: "Show recent edits to the live site",
+    run: async (_argv, ctx) => {
+      if (!ctx.loggedIn) return [err("log: permission denied"), dim("run `login` first")];
+      const result = await ctx.fetchAuditLog();
+      if (!result.ok) return [err(`log: ${result.error}`)];
+      if (result.log.length === 0) return [dim("no edits recorded yet")];
+      return [
+        out(),
+        ...result.log.map((e) =>
+          out(`${e.at}  ${e.action.padEnd(5)} ${e.field.padEnd(14)} from ${e.ip}`)
+        ),
+        out(),
+      ];
     },
   },
   {
@@ -451,7 +553,7 @@ export const commands: Command[] = [
           dim(`targets: ${Object.keys(targets).join(", ")}`),
         ];
       }
-      window.open(url, "_blank", "noopener");
+      window.open(safeHref(url), "_blank", "noopener");
       return [dim(`opening ${url}`)];
     },
   },
@@ -460,7 +562,7 @@ export const commands: Command[] = [
     summary: "Download the PDF resume",
     run: () => {
       const a = document.createElement("a");
-      a.href = getField("profile").resume;
+      a.href = safeHref(getField("profile").resume);
       a.download = "Anil_Kumar_Tiwari_Resume.pdf";
       a.click();
       return [dim("downloading Resume_Anil.pdf ...")];

@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 import type { SectionMeta } from "../data/resume";
+import { safeHref } from "../data/sanitize";
 import { useResumeField } from "../data/store";
 import type { Theme } from "../hooks/useTheme";
 
@@ -112,7 +113,7 @@ export default function CommandPalette({
         Icon: FiDownload,
         run: () => {
           const a = document.createElement("a");
-          a.href = profile.resume;
+          a.href = safeHref(profile.resume);
           a.download = "Anil_Kumar_Tiwari_Resume.pdf";
           a.click();
         },
@@ -122,21 +123,21 @@ export default function CommandPalette({
         label: "Open GitHub",
         hint: profile.githubLabel,
         Icon: FiGithub,
-        run: () => window.open(profile.github, "_blank", "noopener"),
+        run: () => window.open(safeHref(profile.github), "_blank", "noopener"),
       },
       {
         id: "linkedin",
         label: "Open LinkedIn",
         hint: profile.linkedinLabel,
         Icon: FiLinkedin,
-        run: () => window.open(profile.linkedin, "_blank", "noopener"),
+        run: () => window.open(safeHref(profile.linkedin), "_blank", "noopener"),
       },
       ...publications.map((p) => ({
         id: `pub-${p.venue}`,
         label: "Open paper: DAAL",
         hint: p.venue,
         Icon: FiFileText as IconType,
-        run: () => window.open(p.url, "_blank", "noopener"),
+        run: () => window.open(safeHref(p.url), "_blank", "noopener"),
       })),
       {
         id: "theme",

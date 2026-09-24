@@ -15,10 +15,13 @@ Three ways to navigate it:
 | ``Ctrl+` `` | interactive terminal — a real REPL over the resume data |
 
 The terminal is a real shell over a small virtual filesystem (`/resume`,
-`/scratch`): `help`, `neofetch`, `whoami`, `pwd`, `cd`, `ls -la`, `cat <path>`,
-`edit <path>`, `reset <file>`, `mkdir`, `touch`, `rm`, `grep <term>`,
-`open <target>`, `resume`, `login`, `logout`, `theme`, `clear` and `exit`, with
-tab completion and command history. Commands are defined in
+`/scratch`): `help`, `neofetch`, `whoami`, `date`, `uptime`, `uname`, `id`,
+`env`, `history`, `man <command>`, `pwd`, `cd`, `ls -la`, `cat <path>`,
+`edit <path>`, `reset <file>`, `log` (edit audit trail), `mkdir`, `touch`,
+`rm`, `grep <term>`, `open <target>`, `resume`, `login`, `logout`, `theme`,
+`clear` and `exit` — chainable with `;` / `&&`, with path-aware tab
+completion and command history persisted across reloads (except `login`
+lines, which are never written to disk). Commands are defined in
 `src/terminal/commands.ts` and `src/terminal/vfs.ts`, and read the same live
 store as the rendered page (`src/data/store.ts`), so the two can never drift.
 
@@ -54,6 +57,25 @@ netlify env:set AUTH_SECRET "$(openssl rand -hex 32)"
 Locally, put the same two variables in a `.env` file (already gitignored) and
 run `npm run dev:full` (uses the Netlify CLI so the functions and Blobs
 emulator run alongside Vite — plain `npm run dev` won't have `/api/*`).
+
+### Hardening
+
+- **Login is rate-limited.** `/api/auth` tracks failed attempts per IP in
+  Blobs and locks that IP out for 15 minutes after 5 wrong passwords in a
+  15-minute window — brute-forcing `ADMIN_PASSWORD` isn't practical.
+- **Password comparison is constant-time and fixed-length**: both the
+  submitted and expected password are HMAC'd before `crypto.timingSafeEqual`,
+  so a wrong guess can't leak the real password's length via timing.
+- **Every write is schema-validated** (`netlify/functions/lib/schema.mts`,
+  Zod) — shape-checked per field, and any URL-bearing field (profile links,
+  project repos, certificate/publication URLs) is restricted to
+  `http(s)`/`mailto`/`tel`. This closes off a stored-XSS path: without it, a
+  compromised session token could plant a `javascript:` URL that would run in
+  every visitor's browser. `src/data/sanitize.ts` enforces the same allowlist
+  again client-side as defense in depth.
+- **Every edit is audited.** `PUT`/`DELETE` on `/api/resume-data` append to an
+  append-only log (field, action, timestamp, IP) in Blobs, readable with the
+  terminal's `log` command while logged in.
 
 ## Stack
 
@@ -93,6 +115,7 @@ src/
   data/resume.ts      default content (baseline, ships in the build)
   data/store.ts        live content store (defaults + terminal overrides)
   data/api.ts          client for /api/auth and /api/resume-data
+  data/sanitize.ts      href scheme allowlist (defense in depth vs. stored XSS)
   hooks/              theme, scroll-spy, keyboard nav, reduced motion, github
   components/         Section, Reveal, Tag, Metric, TypeLine, CommandPalette,
                       Terminal, nav/TopBar
@@ -101,9 +124,10 @@ src/
   App.tsx             composes the sections, loads overrides on boot
   index.css           theme tokens, base styles, print stylesheet
 netlify/functions/
-  auth.mts            POST /api/auth — verifies ADMIN_PASSWORD, issues a session token
-  resume-data.mts     GET/PUT/DELETE /api/resume-data — Netlify Blobs-backed content store
+  auth.mts            POST /api/auth — rate-limited password check, issues a session token
+  resume-data.mts     GET/PUT/DELETE /api/resume-data — validated, audited, Blobs-backed store
   lib/session.mts     HMAC session signing/verification (AUTH_SECRET)
+  lib/schema.mts      Zod schemas + URL-scheme allowlist for every editable field
 ```
 
 ## Deploy

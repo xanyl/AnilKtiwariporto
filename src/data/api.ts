@@ -69,3 +69,22 @@ export async function resetFieldRemote(token: string, field: ResumeField): Promi
     throw new Error(body.error ?? `reset failed (${res.status})`);
   }
 }
+
+export interface AuditEntry {
+  field: string;
+  action: "set" | "reset";
+  at: string;
+  ip: string;
+}
+
+export async function fetchAuditLog(token: string): Promise<AuditEntry[]> {
+  const res = await fetch("/api/resume-data?audit=1", {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `log fetch failed (${res.status})`);
+  }
+  const body = await res.json();
+  return (body?.log ?? []) as AuditEntry[];
+}

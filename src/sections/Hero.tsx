@@ -1,6 +1,7 @@
 import { FiDownload, FiGithub, FiLinkedin, FiMail, FiPhone, FiTerminal } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import TypeLine from "../components/TypeLine";
+import { safeHref } from "../data/sanitize";
 import { useResumeField } from "../data/store";
 
 const linkClass =
@@ -72,11 +73,11 @@ export default function Hero({ onOpenTerminal }: { onOpenTerminal: () => void })
             >
               <FiTerminal size={13} /> Explore in terminal
             </button>
-            <a href={profile.resume} download className={linkClass}>
+            <a href={safeHref(profile.resume)} download className={linkClass}>
               <FiDownload size={13} /> Resume
             </a>
             <a
-              href={profile.github}
+              href={safeHref(profile.github)}
               target="_blank"
               rel="noreferrer noopener"
               className={linkClass}
@@ -84,7 +85,7 @@ export default function Hero({ onOpenTerminal }: { onOpenTerminal: () => void })
               <FiGithub size={13} /> {profile.githubLabel}
             </a>
             <a
-              href={profile.linkedin}
+              href={safeHref(profile.linkedin)}
               target="_blank"
               rel="noreferrer noopener"
               className={linkClass}

@@ -1,14 +1,15 @@
 import { FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 import Reveal from "../components/Reveal";
 import Section from "../components/Section";
+import { safeHref } from "../data/sanitize";
 import { useResumeField } from "../data/store";
 
 export default function Contact({ index }: { index: number }) {
   const profile = useResumeField("profile");
   const links = [
     { icon: FiMail, label: profile.email, href: `mailto:${profile.email}` },
-    { icon: FiLinkedin, label: profile.linkedinLabel, href: profile.linkedin },
-    { icon: FiGithub, label: profile.githubLabel, href: profile.github },
+    { icon: FiLinkedin, label: profile.linkedinLabel, href: safeHref(profile.linkedin) },
+    { icon: FiGithub, label: profile.githubLabel, href: safeHref(profile.github) },
   ];
   return (
     <Section id="contact" index={index} label="contact">
