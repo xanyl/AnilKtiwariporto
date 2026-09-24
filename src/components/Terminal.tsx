@@ -65,14 +65,21 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
   const [token, setToken] = useState<string | null>(() => authApi.getStoredToken());
   const [editing, setEditing] = useState<EditRequest | null>(null);
   const [draft, setDraft] = useState("");
+  const [savedText, setSavedText] = useState("");
   const [saving, setSaving] = useState(false);
   const [bootedAt] = useState(() => Date.now());
+  const [nanoPrompt, setNanoPrompt] = useState<null | "write" | "exit" | "search">(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusMsg, setStatusMsg] = useState("");
 
   const reduced = useReducedMotion();
   const inputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
+
+  const dirty = draft !== savedText;
 
   const loggedIn = token !== null;
   const prompt = `${loggedIn ? "root" : "guest"}@portfolio:${pathStr(cwd) === "/" ? "~" : pathStr(cwd)}${
@@ -120,8 +127,12 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
   }, [open, lines, editing]);
 
   useEffect(() => {
-    if (editing) editorRef.current?.focus();
-  }, [editing]);
+    if (editing && !nanoPrompt && !saving) editorRef.current?.focus();
+  }, [editing, nanoPrompt, saving]);
+
+  useEffect(() => {
+    if (nanoPrompt === "search") searchInputRef.current?.focus();
+  }, [nanoPrompt]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -198,6 +209,10 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
       requestEdit: (req) => {
         setEditing(req);
         setDraft(req.initialText);
+        setSavedText(req.initialText);
+        setNanoPrompt(null);
+        setStatusMsg("");
+        setSearchQuery("");
       },
     });
     if (result) print(result);
@@ -272,35 +287,116 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     }
   }
 
-  async function saveEdit() {
-    if (!editing) return;
+  /** Ctrl+O — Write Out. Saves without leaving the editor, like real nano. */
+  async function writeFile(): Promise<boolean> {
+    if (!editing) return false;
     setSaving(true);
     try {
       await editing.onSave(draft);
-      print([dim(`saved ${editing.path}`)]);
       if (editing.path.startsWith("/resume/") && loggedIn && token) {
         await persistResumeEdit(editing.path, token, print);
       }
-      setEditing(null);
+      setSavedText(draft);
+      const lines = draft.split("\n").length;
+      setStatusMsg(`Wrote ${lines} line${lines === 1 ? "" : "s"}`);
+      return true;
     } catch (e) {
-      print([err(`edit: ${e instanceof Error ? e.message : "save failed"}`)]);
+      setStatusMsg(`Error writing: ${e instanceof Error ? e.message : "save failed"}`);
+      return false;
     } finally {
       setSaving(false);
     }
   }
 
-  function cancelEdit() {
+  /** Ctrl+X — Exit, prompting to save first when there are unsaved changes. */
+  async function exitEditor(save: boolean) {
+    if (save) {
+      const ok = await writeFile();
+      if (!ok) return; // stay open so the error is visible, like real nano
+    }
     setEditing(null);
-    print([dim("edit cancelled")]);
+    setStatusMsg("");
+    setSearchQuery("");
+  }
+
+  function runSearch() {
+    if (!searchQuery) return;
+    const ta = editorRef.current;
+    const from = ta ? ta.selectionEnd : 0;
+    const q = searchQuery.toLowerCase();
+    const lower = draft.toLowerCase();
+    const afterCursor = lower.indexOf(q, from);
+    const at = afterCursor !== -1 ? afterCursor : lower.indexOf(q);
+    if (at === -1) {
+      setStatusMsg(`"${searchQuery}" not found`);
+      return;
+    }
+    setStatusMsg(`Found "${searchQuery}"`);
+    requestAnimationFrame(() => {
+      ta?.focus();
+      ta?.setSelectionRange(at, at + searchQuery.length);
+    });
   }
 
   function onEditorKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
+    if (e.key === "o" && e.ctrlKey) {
       e.preventDefault();
-      void saveEdit();
+      setNanoPrompt("write");
+      return;
+    }
+    if (e.key === "x" && e.ctrlKey) {
+      e.preventDefault();
+      if (dirty) setNanoPrompt("exit");
+      else void exitEditor(false);
+      return;
+    }
+    if (e.key === "w" && e.ctrlKey) {
+      e.preventDefault();
+      setNanoPrompt("search");
+      return;
+    }
+    if (e.key === "g" && e.ctrlKey) {
+      e.preventDefault();
+      setStatusMsg("^O Write Out   ^X Exit   ^W Where Is   ^G This help");
+      return;
+    }
+    if (statusMsg) setStatusMsg("");
+  }
+
+  function onWritePromptKeyDown(e: React.KeyboardEvent) {
+    e.preventDefault();
+    if (e.key === "Enter") {
+      setNanoPrompt(null);
+      void writeFile();
+    } else if (e.key === "Escape" || (e.key.toLowerCase() === "c" && e.ctrlKey)) {
+      setNanoPrompt(null);
+      setStatusMsg("Cancelled");
+    }
+  }
+
+  function onExitPromptKeyDown(e: React.KeyboardEvent) {
+    e.preventDefault();
+    const k = e.key.toLowerCase();
+    if (k === "y") {
+      setNanoPrompt(null);
+      void exitEditor(true);
+    } else if (k === "n") {
+      setNanoPrompt(null);
+      void exitEditor(false);
+    } else if (e.key === "Escape" || (k === "c" && e.ctrlKey)) {
+      setNanoPrompt(null);
+    }
+  }
+
+  function onSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runSearch();
+      setNanoPrompt(null);
     } else if (e.key === "Escape") {
       e.preventDefault();
-      cancelEdit();
+      setNanoPrompt(null);
+      setSearchQuery("");
     }
   }
 
@@ -342,22 +438,79 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
         </div>
 
         {editing ? (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex shrink-0 items-center justify-between border-b border-line bg-surface px-3 py-1.5 font-mono text-2xs text-faint">
-              <span>
-                editing <span className="text-accent">{editing.path}</span>
-              </span>
-              <span>Ctrl+S save · Esc cancel</span>
+          <div className="flex min-h-0 flex-1 flex-col bg-bg font-mono text-[0.78rem]">
+            {/* nano title bar */}
+            <div className="shrink-0 bg-accent px-3 py-1 text-center text-2xs font-semibold text-bg">
+              GNU nano 7.2   {editing.path}
+              {dirty ? " *" : ""}
             </div>
+
             <textarea
               ref={editorRef}
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={(e) => {
+                setDraft(e.target.value);
+                if (statusMsg) setStatusMsg("");
+              }}
               onKeyDown={onEditorKeyDown}
               spellCheck={false}
-              disabled={saving}
-              className="w-full flex-1 resize-none bg-transparent px-4 py-3 font-mono text-[0.78rem] leading-relaxed text-fg outline-none"
+              disabled={saving || nanoPrompt !== null}
+              className="w-full flex-1 resize-none bg-transparent px-3 py-2 leading-relaxed text-fg outline-none"
             />
+
+            {/* status / prompt line */}
+            <div className="min-h-[1.6em] shrink-0 px-3 py-1 text-2xs">
+              {nanoPrompt === "write" ? (
+                <div
+                  tabIndex={0}
+                  onKeyDown={onWritePromptKeyDown}
+                  ref={(el) => el?.focus()}
+                  className="bg-accent/90 px-1 text-bg outline-none"
+                >
+                  File Name to Write: {editing.path}
+                  <span className="ml-2 text-2xs">(Enter to confirm, ^C to cancel)</span>
+                </div>
+              ) : nanoPrompt === "exit" ? (
+                <div
+                  tabIndex={0}
+                  onKeyDown={onExitPromptKeyDown}
+                  ref={(el) => el?.focus()}
+                  className="bg-accent/90 px-1 text-bg outline-none"
+                >
+                  Save modified buffer?{" "}
+                  <span className="font-semibold">Y</span> Yes{" "}
+                  <span className="font-semibold">N</span> No{" "}
+                  <span className="font-semibold">^C</span> Cancel
+                </div>
+              ) : nanoPrompt === "search" ? (
+                <label className="flex items-center gap-1 bg-accent/90 px-1 text-bg">
+                  Search:
+                  <input
+                    ref={searchInputRef}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={onSearchKeyDown}
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="flex-1 bg-transparent text-bg outline-none placeholder:text-bg/60"
+                  />
+                </label>
+              ) : (
+                <span className="text-faint">{statusMsg || " "}</span>
+              )}
+            </div>
+
+            {/* shortcut bar */}
+            <div className="grid shrink-0 grid-cols-2 gap-x-4 border-t border-line bg-surface px-3 py-1.5 text-2xs text-faint">
+              <span>
+                <span className="text-accent">^G</span> Get Help &nbsp;&nbsp;
+                <span className="text-accent">^O</span> Write Out
+              </span>
+              <span>
+                <span className="text-accent">^W</span> Where Is &nbsp;&nbsp;
+                <span className="text-accent">^X</span> Exit
+              </span>
+            </div>
           </div>
         ) : (
           <div
@@ -398,7 +551,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
         )}
 
         <div className="shrink-0 border-t border-line bg-surface px-3 py-1.5 font-mono text-2xs text-faint">
-          help · ls · cd · cat &lt;file&gt; · edit &lt;file&gt; · login · man &lt;cmd&gt; · exit
+          help · ls · cd · cat &lt;file&gt; · nano &lt;file&gt; · login · man &lt;cmd&gt; · exit
         </div>
       </div>
     </div>

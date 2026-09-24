@@ -17,7 +17,7 @@ Three ways to navigate it:
 The terminal is a real shell over a small virtual filesystem (`/resume`,
 `/scratch`): `help`, `neofetch`, `whoami`, `date`, `uptime`, `uname`, `id`,
 `env`, `history`, `man <command>`, `pwd`, `cd`, `ls -la`, `cat <path>`,
-`edit <path>`, `reset <file>`, `log` (edit audit trail), `mkdir`, `touch`,
+`nano <path>` (aliased as `edit`), `reset <file>`, `log` (edit audit trail), `mkdir`, `touch`,
 `rm`, `grep <term>`, `open <target>`, `resume`, `login`, `logout`, `theme`,
 `clear` and `exit` — chainable with `;` / `&&`, with path-aware tab
 completion and command history persisted across reloads (except `login`
@@ -28,13 +28,15 @@ store as the rendered page (`src/data/store.ts`), so the two can never drift.
 ### Editing the site from the terminal
 
 `/resume` holds one file per content section (`summary.txt`,
-`experience.json`, `projects.json`, ...). `cat` reads them, `edit` opens an
-in-terminal editor (Ctrl+S to save, Esc to cancel). Editing is read-only until
-you authenticate:
+`experience.json`, `projects.json`, ...). `cat` reads them, `nano` opens a
+real, full-screen `nano`-alike: same title bar, same shortcut bar, same
+keybindings — `^O` Write Out (saves without leaving), `^X` Exit (prompts
+`Save modified buffer? Y/N/^C` if there are unsaved changes), `^W` Where Is
+(search), `^G` Get Help. Editing is read-only until you authenticate:
 
 ```
 login <password>
-edit resume/summary.txt
+nano resume/summary.txt
 ```
 
 `login` calls the `/api/auth` Netlify Function, which checks the password

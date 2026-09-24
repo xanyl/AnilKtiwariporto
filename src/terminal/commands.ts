@@ -193,6 +193,43 @@ function dirEntries(cwd: string[]): string[] {
   return node.list();
 }
 
+function openEditor(cmdName: string, argv: string[], ctx: import("./types").CommandContext): Line[] {
+  const target = argv[0];
+  if (!target) return [err(`${cmdName}: missing operand`), dim(`usage: ${cmdName} <path>`)];
+
+  const path = normalize(ctx.cwd, target);
+  const inScratch = path[0] === "scratch";
+  let node = resolve(path);
+
+  if (!node && inScratch && path.length === 2) {
+    scratchTouch(path[1]);
+    node = resolve(path);
+  }
+  if (!node) return [err(`${cmdName}: ${target}: no such file`)];
+  if (node.kind === "dir") return [err(`${cmdName}: ${target}: is a directory`)];
+  if (node.tracked && !ctx.loggedIn) {
+    return [
+      err(`${cmdName}: permission denied`),
+      dim("run `login` first - this file writes to the live site"),
+    ];
+  }
+
+  const write = node.write;
+  ctx.requestEdit({
+    path: pathStr(path),
+    initialText: node.read(),
+    onSave: async (text) => {
+      if (inScratch) {
+        scratchWrite(path[1], text);
+        return;
+      }
+      if (!write) throw new Error("read-only file");
+      write(text);
+    },
+  });
+  return [];
+}
+
 function openTargets(): Record<string, string> {
   const profile = getField("profile");
   return {
@@ -217,7 +254,7 @@ export const commands: Command[] = [
       ...commands.map((c) => out(`  ${c.name.padEnd(14)} ${c.summary}`)),
       out(),
       dim("  Tab completes - Up/Down recalls history - Esc closes the terminal"),
-      dim("  cd/ls/pwd/cat/edit walk a real /resume filesystem - `login` to edit it"),
+      dim("  cd/ls/pwd/cat/nano walk a real /resume filesystem - `login` to edit it"),
       dim("  chain commands with `;` or `&&` - `man <command>` for details"),
       out(),
     ],
@@ -285,7 +322,7 @@ export const commands: Command[] = [
       out("SHELL=/bin/zsh"),
       out("TERM=xterm-256color"),
       out(`HOME=/home/${ctx.loggedIn ? "root" : "guest"}`),
-      out(`EDITOR=${"edit"}`),
+      out("EDITOR=nano"),
       out(`WRITE_ACCESS=${ctx.loggedIn}`),
     ],
   },
@@ -402,43 +439,18 @@ export const commands: Command[] = [
     },
   },
   {
-    name: "edit",
+    name: "nano",
     summary: "Edit a file (requires login for /resume)",
+    usage: "nano <path>",
+    args: (cwd) => dirEntries(cwd),
+    run: (argv, ctx) => openEditor("nano", argv, ctx),
+  },
+  {
+    name: "edit",
+    summary: "Alias for nano",
     usage: "edit <path>",
     args: (cwd) => dirEntries(cwd),
-    run: (argv, ctx) => {
-      const target = argv[0];
-      if (!target) return [err("edit: missing operand"), dim("usage: edit <path>")];
-
-      const path = normalize(ctx.cwd, target);
-      const inScratch = path[0] === "scratch";
-      let node = resolve(path);
-
-      if (!node && inScratch && path.length === 2) {
-        scratchTouch(path[1]);
-        node = resolve(path);
-      }
-      if (!node) return [err(`edit: ${target}: no such file`)];
-      if (node.kind === "dir") return [err(`edit: ${target}: is a directory`)];
-      if (node.tracked && !ctx.loggedIn) {
-        return [err("edit: permission denied"), dim("run `login` first - this file writes to the live site")];
-      }
-
-      const write = node.write;
-      ctx.requestEdit({
-        path: pathStr(path),
-        initialText: node.read(),
-        onSave: async (text) => {
-          if (inScratch) {
-            scratchWrite(path[1], text);
-            return;
-          }
-          if (!write) throw new Error("read-only file");
-          write(text);
-        },
-      });
-      return [dim(`opening ${pathStr(path)} ...`)];
-    },
+    run: (argv, ctx) => openEditor("edit", argv, ctx),
   },
   {
     name: "reset",
@@ -621,7 +633,7 @@ export const commands: Command[] = [
     name: "sudo",
     summary: "Nice try",
     run: (argv, ctx) => {
-      if (ctx.loggedIn) return [dim("you already have write access - just use `edit`")];
+      if (ctx.loggedIn) return [dim("you already have write access - just use `nano`")];
       return [
         err(`${getField("profile").handle} is not in the sudoers file.`),
         dim(argv.length ? `This incident (${argv.join(" ")}) has been reported.` : "This incident has been reported."),
