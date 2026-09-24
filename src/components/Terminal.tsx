@@ -215,6 +215,16 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     [token]
   );
 
+  const deleteAllWall = useCallback(async () => {
+    if (!token) return { ok: false as const, error: "not logged in" };
+    try {
+      const count = await authApi.deleteAllWallEntries(token);
+      return { ok: true as const, count };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : "delete-all failed" };
+    }
+  }, [token]);
+
   async function runCommand(input: string) {
     const [name, ...argv] = input.split(/\s+/);
     const cmd = findCommand(name.toLowerCase());
@@ -239,6 +249,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
       postWall,
       fetchWall,
       deleteWall,
+      deleteAllWall,
       history,
       bootedAt,
       requestEdit: (req) => {

@@ -79,8 +79,11 @@ private, so:
 - **Bounded storage**: capped at the 300 most recent entries; older ones are
   evicted automatically.
 - **Admin moderation**: `wall --delete <id>` (shown next to each entry while
-  logged in) removes an entry via the same session token as the editor, and
-  every deletion is appended to its own append-only log in Blobs.
+  logged in) removes one entry via the same session token as the editor;
+  `wall --delete all --yes` clears the whole board (the `--yes` is required —
+  without it the command just warns instead of acting, so a typo can't wipe
+  everything). Every deletion, single or bulk, is appended to its own
+  append-only log in Blobs.
 - Entries never carry IP or any other visitor metadata in the API response —
   only a display name, message, id, and timestamp are ever public.
 

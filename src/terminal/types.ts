@@ -39,6 +39,7 @@ export interface CommandContext {
   ) => Promise<{ ok: true; entry: WallEntry } | { ok: false; error: string }>;
   fetchWall: () => Promise<{ ok: true; entries: WallEntry[] } | { ok: false; error: string }>;
   deleteWall: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  deleteAllWall: () => Promise<{ ok: true; count: number } | { ok: false; error: string }>;
 }
 
 export interface WallEntry {

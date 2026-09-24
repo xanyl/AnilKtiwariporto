@@ -34,8 +34,9 @@ interface GuardState {
 }
 
 interface ModerationLogEntry {
-  action: "delete";
-  id: string;
+  action: "delete" | "delete-all";
+  id?: string;
+  count?: number;
   at: string;
 }
 
@@ -105,6 +106,19 @@ export default async (req: Request, context: Context) => {
     if (!session) return json({ error: "unauthorized" }, 401);
 
     const url = new URL(req.url);
+    const log = ((await store.get(LOG_KEY, { type: "json" })) as ModerationLogEntry[] | null) ?? [];
+
+    if (url.searchParams.get("all") === "1") {
+      const entries = ((await store.get(ENTRIES_KEY, { type: "json" })) as WallEntry[] | null) ?? [];
+      if (entries.length === 0) return json({ error: "guestbook is already empty" }, 404);
+
+      await store.setJSON(ENTRIES_KEY, []);
+      log.unshift({ action: "delete-all", count: entries.length, at: new Date().toISOString() });
+      await store.setJSON(LOG_KEY, log.slice(0, MAX_LOG_ENTRIES));
+
+      return json({ entries: [], deleted: entries.length });
+    }
+
     const id = url.searchParams.get("id");
     if (!id) return json({ error: "missing id" }, 400);
 
@@ -113,7 +127,6 @@ export default async (req: Request, context: Context) => {
     if (next.length === entries.length) return json({ error: "no such entry" }, 404);
 
     await store.setJSON(ENTRIES_KEY, next);
-    const log = ((await store.get(LOG_KEY, { type: "json" })) as ModerationLogEntry[] | null) ?? [];
     log.unshift({ action: "delete", id, at: new Date().toISOString() });
     await store.setJSON(LOG_KEY, log.slice(0, MAX_LOG_ENTRIES));
 

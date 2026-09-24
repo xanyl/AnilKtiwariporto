@@ -127,3 +127,16 @@ export async function deleteWallEntry(token: string, id: string): Promise<void> 
     throw new Error(body.error ?? `delete failed (${res.status})`);
   }
 }
+
+export async function deleteAllWallEntries(token: string): Promise<number> {
+  const res = await fetch("/api/guestbook?all=1", {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `delete-all failed (${res.status})`);
+  }
+  const body = await res.json();
+  return body.deleted as number;
+}

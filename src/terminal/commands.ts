@@ -502,10 +502,25 @@ export const commands: Command[] = [
   {
     name: "wall",
     summary: "Read or sign the guestbook",
-    usage: "wall [message] | wall --as <name> [message] | wall --delete <id>",
+    usage:
+      "wall [message] | wall --as <name> [message] | wall --delete <id> | wall --delete all --yes",
     run: async (argv, ctx) => {
       if (argv[0] === "--delete" || argv[0] === "-d") {
         if (!ctx.loggedIn) return [err("wall: permission denied"), dim("run `login` first")];
+
+        if (argv[1] === "all") {
+          if (argv[2] !== "--yes") {
+            return [
+              err("wall: this deletes every guestbook entry, permanently"),
+              dim("re-run as `wall --delete all --yes` to confirm"),
+            ];
+          }
+          const result = await ctx.deleteAllWall();
+          return result.ok
+            ? [dim(`deleted all ${result.count} guestbook entries`)]
+            : [err(`wall: ${result.error}`)];
+        }
+
         const id = argv[1];
         if (!id) return [err("wall: missing id"), dim("usage: wall --delete <id>")];
         const result = await ctx.deleteWall(id);
@@ -541,7 +556,9 @@ export const commands: Command[] = [
           ]),
           out(),
           dim(`signed in as ${name} - change with \`wall --as <name>\``),
-          ...(ctx.loggedIn ? [dim("logged in - `wall --delete <id>` removes an entry")] : []),
+          ...(ctx.loggedIn
+            ? [dim("logged in - `wall --delete <id>` removes one, `wall --delete all --yes` clears the board")]
+            : []),
           out(),
         ];
       }
