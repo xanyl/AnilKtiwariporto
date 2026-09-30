@@ -583,6 +583,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
               <span className="sr-only">Terminal input</span>
               <input
                 ref={inputRef}
+                type={SECRET_COMMAND.test(value) ? "password" : "text"}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={onKeyDown}
@@ -620,8 +621,13 @@ async function persistResumeEdit(path: string, token: string, print: (l: Line[])
   const field = FIELD_BY_FILE[file];
   if (!field) return;
   try {
-    await authApi.saveField(token, field, getField(field));
+    const github = await authApi.saveField(token, field, getField(field));
     print([dim("synced to the live site")]);
+    if (github?.ok) {
+      print([dim(`pushed to GitHub (${github.commitSha?.slice(0, 7)})`)]);
+    } else if (github && !github.ok) {
+      print([err(`GitHub push failed: ${github.error ?? "unknown error"}`), dim("live site is still up to date")]);
+    }
   } catch (e) {
     print([
       err(`sync failed: ${e instanceof Error ? e.message : "unknown error"}`),

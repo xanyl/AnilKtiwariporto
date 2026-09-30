@@ -1,5 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
+import { commitResumeFields, getGithubConfig } from "./lib/github.mts";
 import { RESUME_FIELD_SCHEMAS } from "./lib/schema.mts";
 import type { ResumeFieldName } from "./lib/schema.mts";
 import { bearerToken, verifySession } from "./lib/session.mts";
@@ -82,7 +83,24 @@ export default async (req: Request, context: Context) => {
         appendAudit(store, { field, action: "set", at: new Date().toISOString(), ip })
       )
     );
-    return json({ overrides: next });
+
+    let github: { ok: boolean; commitSha?: string; error?: string } | undefined;
+    const ghConfig = getGithubConfig();
+    if (ghConfig) {
+      const fields = Object.keys(validated).join(", ");
+      const result = await commitResumeFields(
+        ghConfig,
+        validated,
+        `content: update ${fields} via live terminal`
+      );
+      if (result.ok) {
+        github = { ok: true, commitSha: result.commitSha };
+      } else {
+        github = { ok: false, error: result.error };
+      }
+    }
+
+    return json({ overrides: next, github });
   }
 
   if (req.method === "DELETE") {

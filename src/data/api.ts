@@ -40,11 +40,17 @@ export async function fetchOverrides(): Promise<Partial<ResumeData>> {
   return (body?.overrides ?? {}) as Partial<ResumeData>;
 }
 
+export interface GithubCommitStatus {
+  ok: boolean;
+  commitSha?: string;
+  error?: string;
+}
+
 export async function saveField<K extends ResumeField>(
   token: string,
   field: K,
   value: ResumeData[K]
-): Promise<void> {
+): Promise<GithubCommitStatus | undefined> {
   const res = await fetch("/api/resume-data", {
     method: "PUT",
     headers: {
@@ -57,6 +63,8 @@ export async function saveField<K extends ResumeField>(
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? `save failed (${res.status})`);
   }
+  const body = await res.json().catch(() => ({}));
+  return body.github as GithubCommitStatus | undefined;
 }
 
 export async function resetFieldRemote(token: string, field: ResumeField): Promise<void> {
