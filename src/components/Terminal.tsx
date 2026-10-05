@@ -5,16 +5,26 @@ import { getField, useResumeField } from "../data/store";
 import type { ResumeField } from "../data/store";
 import useReducedMotion from "../hooks/useReducedMotion";
 import type { Theme } from "../hooks/useTheme";
-import { commandNames, findCommand } from "../terminal/commands";
-import type { AuditEntry, EditRequest, Line, WallEntry } from "../terminal/types";
+import { commandNames, completeArgument } from "../terminal/commands";
+import { createSession, execute } from "../terminal/shell";
+import type { AuditEntry, CommandContext, EditRequest, Line, Session, WallEntry } from "../terminal/types";
 import { accent, dim, err, out } from "../terminal/types";
-import { pathStr } from "../terminal/vfs";
+import { displayPath, homeOf } from "../terminal/vfs";
 
 const BOOT: Line[] = [
   dim("Booting portfolio shell ..."),
-  dim("Loading resume from /resume ... ok"),
+  dim("Mounting /var/www/resume ... ok"),
   out(),
 ];
+
+/** Longest string every candidate starts with, for bash-style partial completion. */
+function commonPrefix(items: string[]): string {
+  return items.reduce((prefix, item) => {
+    let i = 0;
+    while (i < prefix.length && prefix[i] === item[i]) i += 1;
+    return prefix.slice(0, i);
+  });
+}
 
 const HISTORY_KEY = "shell_history";
 /** Never persisted (or replayed via arrow-up) — a real shell's HISTCONTROL would exclude these too. */
@@ -62,8 +72,11 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
   const [history, setHistory] = useState<string[]>(() => loadHistory());
   const [histIndex, setHistIndex] = useState(-1);
   const [booted, setBooted] = useState(false);
-  const [cwd, setCwd] = useState<string[]>([]);
   const [token, setToken] = useState<string | null>(() => authApi.getStoredToken());
+  // Shell state lives in a ref so `cd /tmp && ls` sees the new directory mid-line.
+  const tokenRef = useRef<string | null>(token);
+  const sessionRef = useRef<Session>(createSession(token !== null));
+  const [cwd, setCwd] = useState<string[]>(() => sessionRef.current.cwd);
   const [editing, setEditing] = useState<EditRequest | null>(null);
   const [draft, setDraft] = useState("");
   const [savedText, setSavedText] = useState("");
@@ -83,7 +96,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
   const dirty = draft !== savedText;
 
   const loggedIn = token !== null;
-  const prompt = `${loggedIn ? "root" : "guest"}@portfolio:${pathStr(cwd) === "/" ? "~" : pathStr(cwd)}${
+  const prompt = `${loggedIn ? "root" : "guest"}@portfolio:${displayPath(cwd, homeOf(loggedIn))}${
     loggedIn ? "#" : "$"
   }`;
 
@@ -149,6 +162,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     try {
       const t = await authApi.login(password);
       authApi.storeToken(t);
+      tokenRef.current = t;
       setToken(t);
       return { ok: true as const };
     } catch (e) {
@@ -158,8 +172,41 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
 
   const logout = useCallback(() => {
     authApi.storeToken(null);
+    tokenRef.current = null;
     setToken(null);
+    // /root is off limits again, so don't leave the shell standing in it.
+    const session = sessionRef.current;
+    if (session.cwd[0] === "root") {
+      session.cwd = homeOf(false);
+      setCwd(session.cwd);
+    }
   }, []);
+
+  const persistField = useCallback(
+    async (field: ResumeField) => {
+      const t = tokenRef.current;
+      if (!t) return;
+      try {
+        const github = await authApi.saveField(t, field, getField(field));
+        print([dim("synced to the live site")]);
+        if (github?.ok) {
+          print([dim(`pushed to GitHub (${github.commitSha?.slice(0, 7)})`)]);
+        } else if (github && !github.ok) {
+          print([err(`GitHub push failed: ${github.error ?? "unknown error"}`), dim("live site is still up to date")]);
+        }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "unknown error";
+        print([err(`sync failed: ${message}`), dim("your local view is updated but not saved server-side")]);
+        if (/unauthorized/i.test(message)) {
+          print([dim("session expired - run `login` again")]);
+          authApi.storeToken(null);
+          tokenRef.current = null;
+          setToken(null);
+        }
+      }
+    },
+    [print]
+  );
 
   const resetRemote = useCallback(
     async (field: string) => {
@@ -225,48 +272,9 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     }
   }, [token]);
 
-  async function runCommand(input: string) {
-    const [name, ...argv] = input.split(/\s+/);
-    const cmd = findCommand(name.toLowerCase());
-    if (!cmd) {
-      print([err(`command not found: ${name}`), dim("type `help` to see what's available")]);
-      return;
-    }
-
-    const result = await cmd.run(argv, {
-      print,
-      clear: () => setLines([]),
-      close,
-      theme,
-      setTheme,
-      cwd,
-      setCwd,
-      loggedIn,
-      login,
-      logout,
-      resetRemote,
-      fetchAuditLog,
-      postWall,
-      fetchWall,
-      deleteWall,
-      deleteAllWall,
-      history,
-      bootedAt,
-      requestEdit: (req) => {
-        setEditing(req);
-        setDraft(req.initialText);
-        setSavedText(req.initialText);
-        setNanoPrompt(null);
-        setStatusMsg("");
-        setSearchQuery("");
-      },
-    });
-    if (result) print(result);
-  }
-
   async function submit(raw: string) {
     const input = raw.trim();
-    const hasLogin = /(^|[;&]\s*)login\b/.test(input);
+    const hasLogin = /(^|[;&|]\s*)login\b/.test(input);
     print([{ kind: "input", text: `${prompt} ${hasLogin ? "login ********" : input}` }]);
     setValue("");
     if (!input) return;
@@ -278,31 +286,71 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     });
     setHistIndex(-1);
 
-    // Real shells chain with `;` (always) and `&&` (only after success); this
-    // terminal has no real exit codes, so both just run in sequence.
-    const segments = input
-      .split(/&&|;/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    for (const segment of segments) {
-      await runCommand(segment);
-    }
+    const session = sessionRef.current;
+    await execute(input, session, {
+      loggedIn: () => tokenRef.current !== null,
+      print,
+      persistField,
+      makeCtx: (stdin, emit, fail, piped): CommandContext => ({
+        print: emit,
+        piped,
+        stdin,
+        fail,
+        session,
+        clear: () => setLines([]),
+        close,
+        theme,
+        setTheme,
+        cwd: session.cwd,
+        setCwd: (path) => {
+          session.cwd = path;
+          setCwd(path);
+        },
+        loggedIn: tokenRef.current !== null,
+        login,
+        logout,
+        persistField,
+        resetRemote,
+        fetchAuditLog,
+        postWall,
+        fetchWall,
+        deleteWall,
+        deleteAllWall,
+        history,
+        bootedAt,
+        requestEdit: (req) => {
+          setEditing(req);
+          setDraft(req.initialText);
+          setSavedText(req.initialText);
+          setNanoPrompt(null);
+          setStatusMsg("");
+          setSearchQuery("");
+        },
+      }),
+    });
   }
 
   function complete() {
     const parts = value.split(/\s+/);
-    if (parts.length <= 1) {
-      const hits = commandNames.filter((n) => n.startsWith(parts[0] ?? ""));
-      if (hits.length === 1) setValue(hits[0] + " ");
-      else if (hits.length > 1) print([out(hits.join("   "))]);
-      return;
-    }
-    const cmd = findCommand(parts[0].toLowerCase());
-    const options = cmd?.args?.(cwd) ?? [];
     const partial = parts[parts.length - 1];
-    const hits = options.filter((o) => o.startsWith(partial));
-    if (hits.length === 1) setValue([...parts.slice(0, -1), hits[0]].join(" ") + " ");
-    else if (hits.length > 1) print([out(hits.join("   "))]);
+    const candidates =
+      parts.length <= 1
+        ? [...commandNames, ...Object.keys(sessionRef.current.aliases)].filter((n) => n.startsWith(partial))
+        : completeArgument(parts[0], partial, sessionRef.current.cwd, loggedIn);
+    const hits = [...new Set(candidates)].sort();
+    if (hits.length === 0) return;
+
+    const prefix = commonPrefix(hits);
+    const head = parts.slice(0, -1).join(" ");
+    const join = (word: string) => (head ? `${head} ${word}` : word);
+    if (hits.length === 1) {
+      // Directories keep the cursor inside them so completion can continue.
+      setValue(join(hits[0]) + (hits[0].endsWith("/") ? "" : " "));
+    } else if (prefix.length > partial.length) {
+      setValue(join(prefix));
+    } else {
+      print([out(hits.join("   "))]);
+    }
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -339,9 +387,7 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
     setSaving(true);
     try {
       await editing.onSave(draft);
-      if (editing.path.startsWith("/resume/") && loggedIn && token) {
-        await persistResumeEdit(editing.path, token, print);
-      }
+      if (editing.field && tokenRef.current) await persistField(editing.field);
       setSavedText(draft);
       const lines = draft.split("\n").length;
       setStatusMsg(`Wrote ${lines} line${lines === 1 ? "" : "s"}`);
@@ -603,35 +649,4 @@ export default function Terminal({ open, onClose, theme, setTheme }: Props) {
       </div>
     </div>
   );
-}
-
-const FIELD_BY_FILE: Record<string, ResumeField> = {
-  "profile.json": "profile",
-  "summary.txt": "summary",
-  "experience.json": "experience",
-  "projects.json": "projects",
-  "skills.json": "skillGroups",
-  "education.json": "education",
-  "certificates.json": "certificates",
-  "publications.json": "publications",
-};
-
-async function persistResumeEdit(path: string, token: string, print: (l: Line[]) => void) {
-  const file = path.split("/")[2];
-  const field = FIELD_BY_FILE[file];
-  if (!field) return;
-  try {
-    const github = await authApi.saveField(token, field, getField(field));
-    print([dim("synced to the live site")]);
-    if (github?.ok) {
-      print([dim(`pushed to GitHub (${github.commitSha?.slice(0, 7)})`)]);
-    } else if (github && !github.ok) {
-      print([err(`GitHub push failed: ${github.error ?? "unknown error"}`), dim("live site is still up to date")]);
-    }
-  } catch (e) {
-    print([
-      err(`sync failed: ${e instanceof Error ? e.message : "unknown error"}`),
-      dim("your local view is updated but not saved server-side"),
-    ]);
-  }
 }

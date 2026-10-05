@@ -21,10 +21,62 @@ import Publications from "./sections/Publications";
 import Skills from "./sections/Skills";
 import Summary from "./sections/Summary";
 
+/** How long a visitor waits for the server/GitHub before we show the page anyway. */
+const BOOT_TIMEOUT_MS = 2500;
+
+function useTimeout(ms: number): boolean {
+  const [elapsed, setElapsed] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setElapsed(true), ms);
+    return () => clearTimeout(timer);
+  }, [ms]);
+  return elapsed;
+}
+
+/**
+ * Pulls edits saved from the terminal and applies them. Settles on success or failure;
+ * a response that arrives after the boot timeout still applies, it just can't block the page.
+ */
+function useOverridesSettled(): boolean {
+  const [settled, setSettled] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchOverrides(controller.signal)
+      .then((overrides) => {
+        if (Object.keys(overrides).length) applyOverrides(overrides);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!controller.signal.aborted) setSettled(true);
+      });
+    return () => controller.abort();
+  }, []);
+
+  return settled;
+}
+
+function LoadingScreen() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading"
+      className="flex min-h-screen items-center justify-center bg-bg font-mono text-2xs text-faint"
+    >
+      loading<span className="animate-pulse">_</span>
+    </div>
+  );
+}
+
 export default function App() {
   const { theme, setTheme, toggle } = useTheme();
   const [terminalOpen, setTerminalOpen] = useState(false);
-  const { data: github } = useGithub();
+  const { data: github, loading: githubLoading } = useGithub();
+  // Hold the first paint until the server's saved edits have landed, so visitors never
+  // see the bundled defaults flash and then swap to the current content.
+  const overridesSettled = useOverridesSettled();
+  const timedOut = useTimeout(BOOT_TIMEOUT_MS);
+  const ready = timedOut || (overridesSettled && !githubLoading);
 
   // Open Source only exists when GitHub actually answered, so the nav,
   // the scroll-spy and the section numbering all key off the same list.
@@ -47,13 +99,6 @@ export default function App() {
   const openTerminal = useCallback(() => setTerminalOpen(true), []);
   const closeTerminal = useCallback(() => setTerminalOpen(false), []);
 
-  // Pull any edits saved from the terminal so the live site reflects them on load.
-  useEffect(() => {
-    fetchOverrides().then((overrides) => {
-      if (Object.keys(overrides).length) applyOverrides(overrides);
-    });
-  }, []);
-
   // Ctrl+` is the conventional "drop to shell" binding.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -65,6 +110,8 @@ export default function App() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  if (!ready) return <LoadingScreen />;
 
   return (
     <>

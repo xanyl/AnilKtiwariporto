@@ -13,7 +13,8 @@ const MAX_BYTES = 200_000;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json" },
+    // Edits must show up on the very next load — never serve a cached copy.
+    headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 
 interface AuditEntry {

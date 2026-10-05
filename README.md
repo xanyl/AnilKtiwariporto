@@ -14,21 +14,25 @@ Three ways to navigate it:
 | `⌘K` / `Ctrl+K` | command palette — jump, copy email, download resume |
 | ``Ctrl+` `` | interactive terminal — a real REPL over the resume data |
 
-The terminal is a real shell over a small virtual filesystem (`/resume`,
-`/scratch`): `help`, `neofetch`, `whoami`, `date`, `uptime`, `uname`, `id`,
-`env`, `history`, `man <command>`, `pwd`, `cd`, `ls -la`, `cat <path>`,
-`nano <path>` (aliased as `edit`), `reset <file>`, `log` (edit audit trail), `wall`
-(guestbook), `mkdir`, `touch`,
-`rm`, `grep <term>`, `open <target>`, `resume`, `login`, `logout`, `theme`,
-`clear` and `exit` — chainable with `;` / `&&`, with path-aware tab
-completion and command history persisted across reloads (except `login`
-lines, which are never written to disk). Commands are defined in
-`src/terminal/commands.ts` and `src/terminal/vfs.ts`, and read the same live
-store as the rendered page (`src/data/store.ts`), so the two can never drift.
+The terminal is a small Linux-like shell in the browser: a real directory tree
+(`/etc`, `/proc`, `/tmp`, `/home/guest`, `/root`, `/var/www/resume`, ...), real
+exit statuses, pipes (`|`), redirects (`>`, `>>`), `;` / `&&` / `||`, quoting,
+`$VARS` (`export`, `$?`), `~` and `*` globs, aliases, and bash-style tab
+completion. Commands include `ls -la`, `cd`, `pwd`, `cat`, `head`, `tail`,
+`wc`, `sort`, `uniq`, `grep -rin`, `find`, `tree`, `du`, `stat`, `file`, `cp`,
+`mv`, `rm -rf`, `mkdir -p`, `touch`, `chmod`, `tee`, `echo`, `printf`, `seq`,
+`nano` (also `vi`/`vim`/`edit`), `uname`, `hostname`, `id`, `ps`, `df`,
+`free`, `env`, `which`, `man`, plus portfolio extras: `neofetch`, `about`,
+`reset <file>`, `log` (edit audit trail), `wall` (guestbook), `open`, `resume`,
+`login`, `logout`, `theme`. Command history persists across reloads (except
+`login` lines, which are never written to disk). Commands live in
+`src/terminal/commands.ts`, the shell parser in `src/terminal/shell.ts` and the
+filesystem in `src/terminal/vfs.ts`; they read the same live store as the
+rendered page (`src/data/store.ts`), so the two can never drift.
 
 ### Editing the site from the terminal
 
-`/resume` holds one file per content section (`summary.txt`,
+`~/resume` (also `/var/www/resume`) holds one file per content section (`summary.txt`,
 `experience.json`, `projects.json`, ...). `cat` reads them, `nano` opens a
 real, full-screen `nano`-alike: same title bar, same shortcut bar, same
 keybindings — `^O` Write Out (saves without leaving), `^X` Exit (prompts
@@ -37,7 +41,7 @@ keybindings — `^O` Write Out (saves without leaving), `^X` Exit (prompts
 
 ```
 login <password>
-nano resume/summary.txt
+nano ~/resume/summary.txt
 ```
 
 `login` calls the `/api/auth` Netlify Function, which checks the password
@@ -47,8 +51,13 @@ the client or the repo. Saved edits are written to Netlify Blobs via
 `/api/resume-data` and merged over the defaults in `src/data/resume.ts` for
 every visitor on load, so a save is a real, if instant, content update to the
 live site. `reset <file>` reverts a section back to its default. The
-`/scratch` directory is a normal writable playground (`mkdir`/`touch`/`rm`)
-that never touches site content — it's just there for the shell to feel real.
+`/tmp` and your home directory are normal writable playgrounds
+(`mkdir`/`touch`/`rm`/`cp`/`mv`) that never touch site content and reset on
+reload. Edits to resume files are validated against the same schema the server
+uses, so a malformed edit is rejected instead of breaking the page.
+
+The page itself waits (up to 2.5 s) for the saved edits to load before first
+paint, so visitors never see the bundled defaults flash and then swap.
 
 **One-time setup, per Netlify site:**
 

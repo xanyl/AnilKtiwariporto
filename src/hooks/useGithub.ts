@@ -94,5 +94,5 @@ export default function useGithub() {
     return () => controller.abort();
   }, [data]);
 
-  return { data, failed };
+  return { data, failed, loading: data === null && !failed };
 }

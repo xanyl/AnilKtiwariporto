@@ -33,8 +33,9 @@ export async function login(password: string): Promise<string> {
   return token as string;
 }
 
-export async function fetchOverrides(): Promise<Partial<ResumeData>> {
-  const res = await fetch("/api/resume-data");
+/** Always hits the network: a cached copy here is exactly the stale-then-fresh flash we avoid. */
+export async function fetchOverrides(signal?: AbortSignal): Promise<Partial<ResumeData>> {
+  const res = await fetch("/api/resume-data", { cache: "no-store", signal });
   if (!res.ok) return {};
   const body = await res.json().catch(() => ({}));
   return (body?.overrides ?? {}) as Partial<ResumeData>;
