@@ -40,7 +40,7 @@ export const experience: ExperienceEntry[] = [
     end: "Present",
     bullets: [
       "Served as a first point of contact for 50+ students, practicing active listening and providing resource referrals to ensure academic and personal well-being.",
-      "Collaborated with faculty to modernize course curriculum by integrating real-world datasets, ensuring students gained practical experience with industry-standard tools.",
+      "Worked as a project stakeholder for 7 undergraduate student teams, providing technical guidance, defining requirements, and evaluating deliverables.",
     ],
     stack: ["Python", "SQL", "Teaching"],
   },
@@ -75,6 +75,22 @@ export interface ProjectEntry {
 }
 
 export const projects: ProjectEntry[] = [
+  {
+    name: "whatif",
+    blurb: "Photo-to-civic-improvement mobile app built at Hacklanta 2026.",
+    repo: "https://github.com/SujalRatnaTamrakar/what-if",
+    bullets: [
+      "Built a photo-to-civic-improvement mobile app at Hacklanta 2026 (Cox Social Good track) as part of a 4-person team: users photograph a local issue and receive an AI-generated improvement concept.",
+      "Delivered before/after visualization, review, and proposal detail flows so each concept can be evaluated and shared.",
+      "Developed an Expo/React Native frontend with a Django backend, Auth0 authentication, and Gemini-powered concept generation.",
+    ],
+    metrics: [
+      { value: "Hacklanta", label: "2026" },
+      { value: "Cox", label: "Social Good Track" },
+      { value: "4", label: "Person Team" },
+    ],
+    stack: ["React Native", "Expo", "Django", "Auth0", "Gemini"],
+  },
   {
     name: "SAM2-LatentDiff",
     blurb: "Two-stage low-light image enhancement in latent space.",

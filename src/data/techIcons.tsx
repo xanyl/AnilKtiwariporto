@@ -16,7 +16,10 @@ import {
   SiApacheairflow,
   SiApachekafka,
   SiApachespark,
+  SiAuth0,
+  SiDjango,
   SiDocker,
+  SiExpo,
   SiGithubactions,
   SiJavascript,
   SiKeras,
@@ -88,6 +91,10 @@ const registry: Record<string, TechIcon> = {
   React: { Icon: SiReact, color: "#61DAFB" },
   "React Native": { Icon: SiReact, color: "#61DAFB" },
   "Next.js": { Icon: SiNextdotjs },
+  Expo: { Icon: SiExpo },
+  Django: { Icon: SiDjango, color: "#44B78B" },
+  Auth0: { Icon: SiAuth0, color: "#EB5424" },
+  Gemini: { Icon: FiZap, color: "#8E75B2" },
 
   // Concepts — no brand marks, so neutral glyphs that inherit the text color
   "ETL/ELT Pipelines": { Icon: FiGitBranch },
